@@ -43,6 +43,19 @@ signing.keyAlias=...
 signing.keyPassword=...
 ```
 
+## Releasing
+
+CI runs on every push and PR to `V1` and `V1_DEV` (lint, unit tests, debug build — see `.github/workflows/ci.yml`).
+
+Pushing a `v*.*.*` tag (e.g. `v1.18.0`) triggers `.github/workflows/release.yml`, which builds a signed release APK and publishes it as a GitHub Release. It needs four repository secrets to run:
+
+- `ANDROID_KEYSTORE_BASE64` — the release keystore, base64-encoded (`base64 -w0 your.jks`)
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+Without them the workflow skips instead of failing, so tagging is safe even before signing is set up.
+
 ## Dependencies
 
 - [JSch (mwiede fork)](https://github.com/mwiede/jsch) — SSH protocol implementation
