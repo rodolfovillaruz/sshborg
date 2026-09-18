@@ -52,6 +52,10 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
     /** Whether the SFTP browser shows dotfiles for this host. Default hides them. */
     var sftpShowHidden = MutableStateFlow(false)
     var allowLegacyCiphers = MutableStateFlow(false)
+    /** If true, tmux runs in place of the shell on connect (see [tmuxCommand]). */
+    var tmuxEnabled = MutableStateFlow(false)
+    /** tmux session name, e.g. "work". Blank = host label. */
+    var tmuxCommand = MutableStateFlow("")
     /** Null = ungrouped; otherwise the selected group's ID. */
     var groupId = MutableStateFlow<Long?>(null)
     /** Optional per-host ARGB color; overrides the group color. */
@@ -116,6 +120,8 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
             sftpStartDir.value = h.sftpStartDir ?: ""
             sftpShowHidden.value = h.sftpShowHidden
             allowLegacyCiphers.value = h.allowLegacyCiphers
+            tmuxEnabled.value = h.tmuxEnabled
+            tmuxCommand.value = h.tmuxCommand ?: ""
             groupId.value = h.groupId
             hostColor.value = h.color
             _hasStoredHostKeys.value = h.knownHostsEntry != null || h.jumpHostKeys != null
@@ -186,6 +192,8 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
             sftpStartDir         = newSftpStartDir,
             sftpShowHidden       = sftpShowHidden.value,
             allowLegacyCiphers   = allowLegacyCiphers.value,
+            tmuxEnabled          = tmuxEnabled.value,
+            tmuxCommand          = tmuxCommand.value.trim().takeIf { it.isNotEmpty() },
             groupId              = groupId.value,
             color                = hostColor.value,
         )

@@ -253,6 +253,7 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                         ),
                         columns = columns,
                         rows    = rows,
+                        command = if (host.tmuxEnabled) tmuxCommand(host) else null,
                         onHostKeyVerify = { hostname, fingerprint, keyLine ->
                             runBlocking {
                                 _state.value = ConnectionState.HostKeyPrompt(hostname, fingerprint)
@@ -340,6 +341,22 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
+    }
+
+    /**
+     * Command run directly as the SSH channel (no shell underneath) when [HostEntity.tmuxEnabled] is set.
+     * [HostEntity.tmuxCommand] is a session name; the command is always "tmux new -As <name>", which
+     * attaches to (or creates) that session so reconnecting lands back in the same one. Blank falls
+     * back to the host label. A value that is already a full "tmux ..." command is used verbatim.
+     */
+    private fun tmuxCommand(host: HostEntity): String {
+        val custom = host.tmuxCommand?.trim().orEmpty()
+        if (custom.startsWith("tmux ")) return custom
+        val name = custom.ifBlank { host.label.ifBlank { host.hostname } }
+            .replace(Regex("[^A-Za-z0-9_-]+"), "-")
+            .trim('-')
+            .ifBlank { "session" }
+        return "tmux new -As $name"
     }
 
     private fun isAuthFailure(err: Throwable?): Boolean {

@@ -185,22 +185,44 @@ object SshManager {
     }
 
     /**
-     * Opens an interactive shell session.
+     * Opens an interactive shell session. If [command] is set it is run directly as the
+     * channel's command (with a pty) instead of starting a login shell, so the session
+     * ends when the command does.
      */
     suspend fun openShell(
         params: SshConnectionParams,
         termType: String = "xterm-256color",
         columns: Int = 80,
         rows: Int = 24,
+        command: String? = null,
         onHostKeyVerify: (hostname: String, fingerprint: String, keyLine: String) -> Boolean,
     ): ShellSession = guardedConnect(params, onHostKeyVerify) { guard -> runInterruptible {
 
         val (session, jumpSessions, newJumpKeyLines, newJumpHostKeyUpdates) = createSession(params, guard)
 
-        val channel = session.openChannel("shell") as ChannelShell
-        channel.setPtyType(termType)
-        channel.setPtySize(columns, rows, columns * 8, rows * 16)
-        channel.setAgentForwarding(params.agentForwarding)
+        // JSch's shared parent (ChannelSession) is package-private, so each branch configures
+        // its own concrete channel and hands ShellSession a resize callback.
+        val channel: Channel
+        val resizePty: (Int, Int) -> Unit
+        if (command != null) {
+            val exec = session.openChannel("exec") as ChannelExec
+            // exec runs via the account's shell non-login; re-run under a login shell so
+            // PATH matches an interactive session (tmux is often not on the bare PATH).
+            exec.setCommand("exec \"\$SHELL\" -lc '${command.replace("'", "'\\''")}'")
+            exec.setPty(true)
+            exec.setPtyType(termType)
+            exec.setPtySize(columns, rows, columns * 8, rows * 16)
+            exec.setAgentForwarding(params.agentForwarding)
+            channel = exec
+            resizePty = { c, r -> exec.setPtySize(c, r, c * 8, r * 16) }
+        } else {
+            val shell = session.openChannel("shell") as ChannelShell
+            shell.setPtyType(termType)
+            shell.setPtySize(columns, rows, columns * 8, rows * 16)
+            shell.setAgentForwarding(params.agentForwarding)
+            channel = shell
+            resizePty = { c, r -> shell.setPtySize(c, r, c * 8, r * 16) }
+        }
 
         // Stdout: initialise JSch's internal pipe BEFORE connecting so no bytes are lost.
         val channelInput = channel.inputStream
@@ -219,7 +241,7 @@ object SshManager {
         channel.connect(10_000)
 
         val hostKeyLine = buildKnownHostsLine(session.hostKey)
-        ShellSession(session, channel, channelInput, channelOutput, params.hostname, hostKeyLine, jumpSessions, newJumpKeyLines, newJumpHostKeyUpdates)
+        ShellSession(session, channel, resizePty, channelInput, channelOutput, params.hostname, hostKeyLine, jumpSessions, newJumpKeyLines, newJumpHostKeyUpdates)
     } }
 
     /**
@@ -726,7 +748,8 @@ data class ImportedKey(
 /** A live interactive SSH shell. */
 class ShellSession(
     private val session: Session,
-    private val channel: ChannelShell,
+    private val channel: Channel,
+    private val resizePty: (columns: Int, rows: Int) -> Unit,
     private val channelInput: java.io.InputStream,
     private val stdinOutput: java.io.OutputStream,
     val hostname: String,
@@ -770,7 +793,7 @@ class ShellSession(
     }
 
     fun resize(columns: Int, rows: Int) {
-        channel.setPtySize(columns, rows, columns * 8, rows * 16)
+        resizePty(columns, rows)
     }
 
     /**
