@@ -63,6 +63,8 @@ jobs:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          # Public OAuth client ID (not a secret); a repository *variable*. Unset = Google sign-in stays hidden.
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
         run: |
           cat > local.properties <<EOF
           signing.storeFile=${KEYSTORE_PATH}
@@ -70,6 +72,9 @@ jobs:
           signing.keyAlias=${KEY_ALIAS}
           signing.keyPassword=${KEY_PASSWORD}
           EOF
+          if [ -n "$GOOGLE_CLIENT_ID" ]; then
+            echo "google.clientId=${GOOGLE_CLIENT_ID}" >> local.properties
+          fi
 
       - name: Assemble release APK
         if: steps.signing.outputs.configured == 'true'
