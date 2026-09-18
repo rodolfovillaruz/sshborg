@@ -60,6 +60,8 @@ fun AddEditHostScreen(
     val useKey by vm.useKey.collectAsState()
     val selectedKeyId by vm.selectedKeyId.collectAsState()
     val agentForwarding by vm.agentForwarding.collectAsState()
+    val tmuxEnabled by vm.tmuxEnabled.collectAsState()
+    val tmuxCommand by vm.tmuxCommand.collectAsState()
     val jumpHosts by vm.jumpHosts.collectAsState()
     val portForwardings by vm.portForwardings.collectAsState()
     val jumpMode by vm.jumpMode.collectAsState()
@@ -343,6 +345,27 @@ fun AddEditHostScreen(
                 Switch(checked = allowLegacyCiphers, onCheckedChange = { vm.allowLegacyCiphers.value = it })
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.host_allow_legacy_ciphers))
+            }
+
+            HorizontalDivider()
+            Text(stringResource(R.string.host_section_tmux), style = MaterialTheme.typography.titleSmall)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = tmuxEnabled, onCheckedChange = { vm.tmuxEnabled.value = it })
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.host_tmux_enabled))
+            }
+
+            if (tmuxEnabled) {
+                HostField(
+                    value = tmuxCommand,
+                    onValueChange = { vm.tmuxCommand.value = it },
+                    label = stringResource(R.string.host_field_tmux_command),
+                    touchless = touchless,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = stringResource(R.string.host_tmux_command_placeholder, label.ifBlank { stringResource(R.string.host_tmux_command_placeholder_default) }),
+                    supporting = stringResource(R.string.host_tmux_command_supporting),
+                )
             }
 
             HorizontalDivider()

@@ -60,4 +60,11 @@ data class HostEntity(
     val position: Int? = null,
     /** How many terminal sessions were opened to this host; drives the "most used" order. */
     val connectCount: Int = 0,
+    /** If true, [tmuxCommand] is sent to the shell as soon as it connects. */
+    val tmuxEnabled: Boolean = false,
+    /**
+     * Command run on connect when [tmuxEnabled] is set, e.g. "tmux new -As work".
+     * Null/blank falls back to "tmux new -As <label>".
+     */
+    val tmuxCommand: String? = null,
 )

@@ -328,6 +328,9 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                         allowLegacyCiphers = host.allowLegacyCiphers,
                     )
                     startReading(session)
+                    if (host.tmuxEnabled) {
+                        runCatching { session.write("${tmuxCommand(host)}\r".toByteArray(Charsets.UTF_8)) }
+                    }
                     if (prefs.historySuggestions.first()) loadCommandHistory()
                     return@launch
                 }
@@ -353,6 +356,21 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
+    }
+
+    /**
+     * Command sent to the shell right after connecting when [HostEntity.tmuxEnabled] is set.
+     * A custom [HostEntity.tmuxCommand] is used verbatim; otherwise defaults to attaching to
+     * (or creating) a session named after the host, so reconnecting lands back in the same one.
+     */
+    private fun tmuxCommand(host: HostEntity): String {
+        host.tmuxCommand?.takeIf { it.isNotBlank() }?.let { return it }
+        val name = host.label.ifBlank { host.hostname }
+            .lowercase()
+            .replace(Regex("[^a-z0-9_-]+"), "-")
+            .trim('-')
+            .ifBlank { "session" }
+        return "tmux new -As $name"
     }
 
     private fun isAuthFailure(err: Throwable?): Boolean {
