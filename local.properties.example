@@ -10,3 +10,7 @@ signing.storeFile=/path/to/keystore.jks
 signing.storePassword=
 signing.keyAlias=
 signing.keyPassword=
+
+# Google OAuth client ID (type "Android", package com.sshborg) — optional, enables
+# "Sign in with Google" for hosts that get their address from a reflector.
+# google.clientId=1234567890-abc.apps.googleusercontent.com
