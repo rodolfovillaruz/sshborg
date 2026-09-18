@@ -185,19 +185,31 @@ object SshManager {
     }
 
     /**
-     * Opens an interactive shell session.
+     * Opens an interactive shell session. If [command] is set it is run directly as the
+     * channel's command (with a pty) instead of starting a login shell, so the session
+     * ends when the command does.
      */
     suspend fun openShell(
         params: SshConnectionParams,
         termType: String = "xterm-256color",
         columns: Int = 80,
         rows: Int = 24,
+        command: String? = null,
         onHostKeyVerify: (hostname: String, fingerprint: String, keyLine: String) -> Boolean,
     ): ShellSession = guardedConnect(params, onHostKeyVerify) { guard -> runInterruptible {
 
         val (session, jumpSessions, newJumpKeyLines, newJumpHostKeyUpdates) = createSession(params, guard)
 
-        val channel = session.openChannel("shell") as ChannelShell
+        val channel: ChannelSession = if (command != null) {
+            (session.openChannel("exec") as ChannelExec).also {
+                // exec runs via the account's shell non-login; re-run under a login shell so
+                // PATH matches an interactive session (tmux is often not on the bare PATH).
+                it.setCommand("exec \"\$SHELL\" -lc '${command.replace("'", "'\\''")}'")
+                it.setPty(true)
+            }
+        } else {
+            session.openChannel("shell") as ChannelShell
+        }
         channel.setPtyType(termType)
         channel.setPtySize(columns, rows, columns * 8, rows * 16)
         channel.setAgentForwarding(params.agentForwarding)
@@ -614,7 +626,7 @@ object SshManager {
 /** A live interactive SSH shell. */
 class ShellSession(
     private val session: Session,
-    private val channel: ChannelShell,
+    private val channel: ChannelSession,
     private val channelInput: java.io.InputStream,
     private val stdinOutput: java.io.OutputStream,
     val hostname: String,

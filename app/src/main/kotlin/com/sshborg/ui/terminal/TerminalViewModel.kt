@@ -260,6 +260,7 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                         ),
                         columns = columns,
                         rows    = rows,
+                        command = if (host.tmuxEnabled) tmuxCommand(host) else null,
                         onHostKeyVerify = { hostname, fingerprint, keyLine ->
                             runBlocking {
                                 _state.value = ConnectionState.HostKeyPrompt(hostname, fingerprint)
@@ -332,9 +333,6 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                         allowLegacyCiphers = host.allowLegacyCiphers,
                     )
                     startReading(session)
-                    if (host.tmuxEnabled) {
-                        runCatching { session.write("${tmuxCommand(host)}\r".toByteArray(Charsets.UTF_8)) }
-                    }
                     if (prefs.historySuggestions.first()) loadCommandHistory()
                     return@launch
                 }
@@ -363,7 +361,7 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Command sent to the shell right after connecting when [HostEntity.tmuxEnabled] is set.
+     * Command run directly as the SSH channel (no shell underneath) when [HostEntity.tmuxEnabled] is set.
      * A custom [HostEntity.tmuxCommand] is used verbatim; otherwise defaults to attaching to
      * (or creating) a session named after the host, so reconnecting lands back in the same one.
      */
