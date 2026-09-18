@@ -89,6 +89,12 @@
     <string name="host_key_no_keys">Sem chaves – adicione uma primeiro</string>
     <string name="host_agent_forwarding">Encaminhamento de agente</string>
     <string name="host_allow_legacy_ciphers">Cifras legadas</string>
+    <string name="host_section_tmux">Tmux</string>
+    <string name="host_tmux_enabled">Iniciar tmux ao conectar</string>
+    <string name="host_field_tmux_command">Comando</string>
+    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_tmux_command_placeholder_default">sessão</string>
+    <string name="host_tmux_command_supporting">Enviado ao shell logo após a conexão. -A conecta à sessão se ela já existir; caso contrário, a cria.</string>
     <string name="host_section_jump_hosts">Hosts de Salto</string>
     <string name="host_field_jump_hosts">Hosts de salto (-J)</string>
     <string name="host_jump_hosts_placeholder">host1:22,utilizador@host2:2222</string>

@@ -92,6 +92,12 @@
     <string name="host_key_no_keys">无密钥 — 请先添加一个</string>
     <string name="host_agent_forwarding">代理转发</string>
     <string name="host_allow_legacy_ciphers">允许旧版加密</string>
+    <string name="host_section_tmux">Tmux</string>
+    <string name="host_tmux_enabled">连接后启动 tmux</string>
+    <string name="host_field_tmux_command">命令</string>
+    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_tmux_command_placeholder_default">会话</string>
+    <string name="host_tmux_command_supporting">连接成功后立即发送到 shell。-A 会在会话已存在时附加到该会话,否则创建新会话。</string>
     <string name="host_section_jump_hosts">跳板机</string>
     <string name="host_field_jump_hosts">跳板机（-J）</string>
     <string name="host_jump_hosts_placeholder">host1:22,user@host2:2222</string>

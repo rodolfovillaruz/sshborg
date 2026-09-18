@@ -93,6 +93,12 @@
     <string name="host_key_no_keys">Нет ключей — сначала добавьте один</string>
     <string name="host_agent_forwarding">Проброс агента</string>
     <string name="host_allow_legacy_ciphers">Разрешить устаревшие шифры</string>
+    <string name="host_section_tmux">Tmux</string>
+    <string name="host_tmux_enabled">Запускать tmux при подключении</string>
+    <string name="host_field_tmux_command">Команда</string>
+    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_tmux_command_placeholder_default">сессия</string>
+    <string name="host_tmux_command_supporting">Отправляется в оболочку сразу после подключения. -A подключается к сессии, если она уже существует, иначе создаёт её.</string>
     <string name="host_section_jump_hosts">Промежуточные хосты</string>
     <string name="host_field_jump_hosts">Промежуточные хосты (-J)</string>
     <string name="host_jump_hosts_placeholder">host1:22,user@host2:2222</string>

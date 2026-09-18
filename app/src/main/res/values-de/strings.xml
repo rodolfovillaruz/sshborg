@@ -89,6 +89,12 @@
     <string name="host_key_no_keys">Keine Schlüssel – zuerst einen hinzufügen</string>
     <string name="host_agent_forwarding">Agent-Weiterleitung</string>
     <string name="host_allow_legacy_ciphers">Legacy-Verschlüsselung</string>
+    <string name="host_section_tmux">Tmux</string>
+    <string name="host_tmux_enabled">Tmux beim Verbinden starten</string>
+    <string name="host_field_tmux_command">Befehl</string>
+    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_tmux_command_placeholder_default">Sitzung</string>
+    <string name="host_tmux_command_supporting">Wird direkt nach dem Verbindungsaufbau an die Shell gesendet. -A verbindet mit der Sitzung, falls sie bereits existiert, andernfalls wird sie erstellt.</string>
     <string name="host_section_jump_hosts">Jump-Hosts</string>
     <string name="host_field_jump_hosts">Jump-Hosts (-J)</string>
     <string name="host_jump_hosts_placeholder">host1:22,benutzer@host2:2222</string>
