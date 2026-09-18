@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
             requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         val prefs = (application as SshBorgApp).appPreferences
+        handleOAuthRedirect(intent)
         setContent {
             val nightMode by prefs.nightMode.collectAsState(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             SshBorgTheme(nightMode = nightMode) {
@@ -83,6 +84,25 @@ class MainActivity : AppCompatActivity() {
         val overlay = View(this).apply { setBackgroundColor(tv.data) }
         window.addContentView(overlay, android.view.ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         privacyOverlay = overlay
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleOAuthRedirect(intent)
+    }
+
+    /** Finishes Google sign-in when the browser hands control back via the OAuth redirect. */
+    private fun handleOAuthRedirect(intent: android.content.Intent?) {
+        val uri = intent?.data ?: return
+        val auth = (application as SshBorgApp).googleAuth
+        if (!auth.isRedirect(uri)) return
+        lifecycleScope.launch {
+            val msg = runCatching { auth.handleRedirect(uri) }.fold(
+                onSuccess = { getString(R.string.google_signed_in_as, it) },
+                onFailure = { it.message ?: getString(R.string.google_sign_in_failed) },
+            )
+            android.widget.Toast.makeText(this@MainActivity, msg, android.widget.Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun setPrivacy(locked: Boolean) {

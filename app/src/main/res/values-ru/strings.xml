@@ -93,6 +93,15 @@
     <string name="host_key_no_keys">Нет ключей — сначала добавьте один</string>
     <string name="host_agent_forwarding">Проброс агента</string>
     <string name="host_allow_legacy_ciphers">Разрешить устаревшие шифры</string>
+    <string name="host_section_reflector">Reflector</string>
+    <string name="host_field_reflector_url">URL reflector</string>
+    <string name="host_reflector_supporting">Необязательно. Если задан, адрес запрашивается с этого https-эндпоинта после входа через Google (сервер при этом запускается, если остановлен), а имя хоста выше для подключения не используется.</string>
+    <string name="settings_google_title">Аккаунт Google</string>
+    <string name="settings_google_subtitle">Войдите, чтобы подключаться к хостам с reflector</string>
+    <string name="settings_google_sign_in">Войти</string>
+    <string name="settings_google_sign_out">Выйти</string>
+    <string name="google_signed_in_as">Вы вошли как %1$s</string>
+    <string name="google_sign_in_failed">Не удалось войти через Google</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Запускать tmux при подключении</string>
     <string name="host_field_tmux_command">Команда</string>

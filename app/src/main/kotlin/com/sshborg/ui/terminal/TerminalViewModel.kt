@@ -211,9 +211,13 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
         synchronized(_emulator.value) { _emulator.value.resize(columns, rows) }
 
         connectJob = viewModelScope.launch(Dispatchers.IO) {
-            val host = hostDao.getById(hostId) ?: run {
+            val stored = hostDao.getById(hostId) ?: run {
                 _state.value = ConnectionState.Error(getApplication<Application>().getString(R.string.error_host_not_found)); return@launch
             }
+            // Reflector hosts get their address (and a boot request if stopped) before connecting.
+            if (stored.reflectorUrl != null) _state.value = ConnectionState.Connecting
+            val host = (getApplication<Application>() as com.sshborg.SshBorgApp).hostResolver
+                .resolveOrReport(stored) { _state.value = ConnectionState.Error(it) } ?: return@launch
             var auth = buildAuth(host) ?: return@launch
             var wrongPassword = false
 

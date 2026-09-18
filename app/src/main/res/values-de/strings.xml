@@ -89,6 +89,15 @@
     <string name="host_key_no_keys">Keine Schlüssel – zuerst einen hinzufügen</string>
     <string name="host_agent_forwarding">Agent-Weiterleitung</string>
     <string name="host_allow_legacy_ciphers">Legacy-Verschlüsselung</string>
+    <string name="host_section_reflector">Reflector</string>
+    <string name="host_field_reflector_url">Reflector-URL</string>
+    <string name="host_reflector_supporting">Optional. Wenn gesetzt, wird die Adresse nach der Google-Anmeldung von diesem https-Endpunkt abgerufen (der auch den Server startet, falls er gestoppt ist); der obige Hostname wird nicht zum Verbinden verwendet.</string>
+    <string name="settings_google_title">Google-Konto</string>
+    <string name="settings_google_subtitle">Anmelden, um Hosts mit Reflector zu nutzen</string>
+    <string name="settings_google_sign_in">Anmelden</string>
+    <string name="settings_google_sign_out">Abmelden</string>
+    <string name="google_signed_in_as">Angemeldet als %1$s</string>
+    <string name="google_sign_in_failed">Google-Anmeldung fehlgeschlagen</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Tmux beim Verbinden starten</string>
     <string name="host_field_tmux_command">Befehl</string>

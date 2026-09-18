@@ -92,6 +92,15 @@
     <string name="host_key_no_keys">鍵がありません — 先に追加してください</string>
     <string name="host_agent_forwarding">エージェント転送</string>
     <string name="host_allow_legacy_ciphers">レガシー暗号を許可</string>
+    <string name="host_section_reflector">Reflector</string>
+    <string name="host_field_reflector_url">Reflector URL</string>
+    <string name="host_reflector_supporting">任意。設定すると、Googleログイン後にこのhttpsエンドポイントからアドレスを取得します（サーバーが停止中なら起動もします）。上のホスト名は接続には使われません。</string>
+    <string name="settings_google_title">Googleアカウント</string>
+    <string name="settings_google_subtitle">Reflectorを使うホストに接続するにはログインしてください</string>
+    <string name="settings_google_sign_in">ログイン</string>
+    <string name="settings_google_sign_out">ログアウト</string>
+    <string name="google_signed_in_as">%1$s としてログイン中</string>
+    <string name="google_sign_in_failed">Googleログインに失敗しました</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">接続時にtmuxを起動</string>
     <string name="host_field_tmux_command">コマンド</string>

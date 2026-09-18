@@ -22,6 +22,15 @@ android {
     val localPropsFile = rootProject.file("local.properties")
     if (localPropsFile.exists()) localPropsFile.inputStream().use { localProps.load(it) }
 
+    // Optional Google OAuth "Android" client ID; enables sign-in for reflector hosts.
+    val googleClientId = localProps.getProperty("google.clientId", "")
+    defaultConfig {
+        buildConfigField("String", "GOOGLE_CLIENT_ID", "\"$googleClientId\"")
+        // Redirect scheme is the reversed client ID; the placeholder keeps the manifest valid when unset.
+        manifestPlaceholders["googleRedirectScheme"] = if (googleClientId.isBlank()) "com.sshborg.oauth.unconfigured"
+            else "com.googleusercontent.apps." + googleClientId.removeSuffix(".apps.googleusercontent.com")
+    }
+
     signingConfigs {
         create("release") {
             val sf = localProps.getProperty("signing.storeFile")

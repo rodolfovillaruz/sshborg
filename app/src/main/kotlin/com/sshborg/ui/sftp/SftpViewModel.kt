@@ -168,10 +168,13 @@ class SftpViewModel(app: Application) : AndroidViewModel(app) {
         val hostId = sessionManager.get(id)?.hostId ?: return
 
         viewModelScope.launch(Dispatchers.IO) {
-            val host = hostDao.getById(hostId) ?: run {
+            val stored = hostDao.getById(hostId) ?: run {
                 _state.value = State.Error(getApplication<Application>().getString(R.string.error_host_not_found)); return@launch
             }
-            _showHidden.value = host.sftpShowHidden
+            _showHidden.value = stored.sftpShowHidden
+            if (stored.reflectorUrl != null) _state.value = State.Connecting
+            val host = sshBorgApp.hostResolver
+                .resolveOrReport(stored) { _state.value = State.Error(it) } ?: return@launch
             var auth = buildAuth(host) ?: return@launch
             var wrongPassword = false
 

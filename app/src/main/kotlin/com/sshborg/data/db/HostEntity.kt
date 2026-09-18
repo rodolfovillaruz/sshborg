@@ -67,4 +67,9 @@ data class HostEntity(
      * Null/blank falls back to "tmux new -As <label>".
      */
     val tmuxCommand: String? = null,
+    /**
+     * If set (https URL of a reflector Worker), the address is not [hostname] but whatever the
+     * reflector returns after Google sign-in; it also boots the instance if it is stopped.
+     */
+    val reflectorUrl: String? = null,
 )

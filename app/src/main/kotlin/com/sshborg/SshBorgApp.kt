@@ -7,6 +7,8 @@ import android.net.NetworkCapabilities
 import com.jcraft.jsch.JSch
 import com.sshborg.data.AppLockManager
 import com.sshborg.data.AppPreferences
+import com.sshborg.data.reflector.GoogleAuth
+import com.sshborg.data.reflector.HostResolver
 import com.sshborg.data.ssh.SshDiagnostics
 import com.sshborg.data.db.AppDatabase
 import com.sshborg.service.SessionManager
@@ -21,6 +23,8 @@ class SshBorgApp : Application() {
     val transferManager by lazy { TransferManager(this) }
     val appPreferences by lazy { AppPreferences(this) }
     val appLockManager by lazy { AppLockManager(appPreferences) }
+    val googleAuth by lazy { GoogleAuth(appPreferences) }
+    val hostResolver by lazy { HostResolver(googleAuth) }
 
     /** Timestamp of the last successful biometric authentication (in-memory only). */
     var lastAuthTime: Long = 0L

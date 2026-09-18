@@ -51,6 +51,9 @@ class AppPreferences(private val context: Context) {
         val LOCK_SECRET_ITER     = intPreferencesKey("lock_secret_iterations")
         val LOCK_FAILED_ATTEMPTS = intPreferencesKey("lock_failed_attempts")
         val LOCK_LOCKOUT_UNTIL   = longPreferencesKey("lock_lockout_until")   // epoch millis
+        // Google sign-in for reflector hosts: refresh token is Keystore-encrypted.
+        val GOOGLE_REFRESH_TOKEN = stringPreferencesKey("google_refresh_token")
+        val GOOGLE_EMAIL         = stringPreferencesKey("google_email")
     }
 
     /**
@@ -117,6 +120,21 @@ class AppPreferences(private val context: Context) {
 
     suspend fun setNightMode(mode: Int) {
         context.dataStore.edit { it[Keys.NIGHT_MODE] = mode }
+    }
+
+    /** Keystore-encrypted Google refresh token, or null when signed out. */
+    val googleRefreshToken: Flow<String?> =
+        context.dataStore.data.map { it[Keys.GOOGLE_REFRESH_TOKEN] }
+
+    val googleEmail: Flow<String?> =
+        context.dataStore.data.map { it[Keys.GOOGLE_EMAIL] }
+
+    suspend fun setGoogleAccount(encryptedRefreshToken: String?, email: String?) {
+        context.dataStore.edit {
+            if (encryptedRefreshToken == null) it.remove(Keys.GOOGLE_REFRESH_TOKEN)
+            else it[Keys.GOOGLE_REFRESH_TOKEN] = encryptedRefreshToken
+            if (email == null) it.remove(Keys.GOOGLE_EMAIL) else it[Keys.GOOGLE_EMAIL] = email
+        }
     }
 
     val allowScreenshots: Flow<Boolean> =

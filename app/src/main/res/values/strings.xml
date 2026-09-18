@@ -93,6 +93,15 @@
     <string name="host_key_no_keys">No keys – go add one first</string>
     <string name="host_agent_forwarding">Agent Forwarding</string>
     <string name="host_allow_legacy_ciphers">Allow Legacy Ciphers</string>
+    <string name="host_section_reflector">Reflector</string>
+    <string name="host_field_reflector_url">Reflector URL</string>
+    <string name="host_reflector_supporting">Optional. When set, the address is fetched from this https endpoint after Google sign-in (which also starts the server if it is stopped) and the hostname above is not used to connect.</string>
+    <string name="settings_google_title">Google account</string>
+    <string name="settings_google_subtitle">Sign in to connect to hosts that use a reflector</string>
+    <string name="settings_google_sign_in">Sign in</string>
+    <string name="settings_google_sign_out">Sign out</string>
+    <string name="google_signed_in_as">Signed in as %1$s</string>
+    <string name="google_sign_in_failed">Google sign-in failed</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Launch tmux on connect</string>
     <string name="host_field_tmux_command">Command</string>

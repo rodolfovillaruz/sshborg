@@ -56,6 +56,8 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
     var tmuxEnabled = MutableStateFlow(false)
     /** Command run on connect, e.g. "tmux new -As work". Blank = "tmux new -As <label>". */
     var tmuxCommand = MutableStateFlow("")
+    /** https URL of a reflector Worker that supplies this host's address after Google sign-in. Blank = off. */
+    var reflectorUrl = MutableStateFlow("")
     /** Null = ungrouped; otherwise the selected group's ID. */
     var groupId = MutableStateFlow<Long?>(null)
     /** Optional per-host ARGB color; overrides the group color. */
@@ -122,6 +124,7 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
             allowLegacyCiphers.value = h.allowLegacyCiphers
             tmuxEnabled.value = h.tmuxEnabled
             tmuxCommand.value = h.tmuxCommand ?: ""
+            reflectorUrl.value = h.reflectorUrl ?: ""
             groupId.value = h.groupId
             hostColor.value = h.color
             _hasStoredHostKeys.value = h.knownHostsEntry != null || h.jumpHostKeys != null
@@ -194,6 +197,7 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
             allowLegacyCiphers   = allowLegacyCiphers.value,
             tmuxEnabled          = tmuxEnabled.value,
             tmuxCommand          = tmuxCommand.value.trim().takeIf { it.isNotEmpty() },
+            reflectorUrl         = reflectorUrl.value.trim().takeIf { it.isNotEmpty() },
             groupId              = groupId.value,
             color                = hostColor.value,
         )

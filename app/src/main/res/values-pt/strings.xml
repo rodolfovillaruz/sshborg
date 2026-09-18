@@ -89,6 +89,15 @@
     <string name="host_key_no_keys">Sem chaves – adicione uma primeiro</string>
     <string name="host_agent_forwarding">Encaminhamento de agente</string>
     <string name="host_allow_legacy_ciphers">Cifras legadas</string>
+    <string name="host_section_reflector">Reflector</string>
+    <string name="host_field_reflector_url">URL do reflector</string>
+    <string name="host_reflector_supporting">Opcional. Se definido, o endereço é obtido deste endpoint https após o login com Google (o que também inicia o servidor se estiver parado) e o nome do host acima não é usado para conectar.</string>
+    <string name="settings_google_title">Conta Google</string>
+    <string name="settings_google_subtitle">Faça login para conectar a hosts que usam um reflector</string>
+    <string name="settings_google_sign_in">Entrar</string>
+    <string name="settings_google_sign_out">Sair</string>
+    <string name="google_signed_in_as">Conectado como %1$s</string>
+    <string name="google_sign_in_failed">Falha no login com Google</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Iniciar tmux ao conectar</string>
     <string name="host_field_tmux_command">Comando</string>

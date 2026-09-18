@@ -62,6 +62,7 @@ fun AddEditHostScreen(
     val agentForwarding by vm.agentForwarding.collectAsState()
     val tmuxEnabled by vm.tmuxEnabled.collectAsState()
     val tmuxCommand by vm.tmuxCommand.collectAsState()
+    val reflectorUrl by vm.reflectorUrl.collectAsState()
     val jumpHosts by vm.jumpHosts.collectAsState()
     val portForwardings by vm.portForwardings.collectAsState()
     val jumpMode by vm.jumpMode.collectAsState()
@@ -346,6 +347,19 @@ fun AddEditHostScreen(
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.host_allow_legacy_ciphers))
             }
+
+            HorizontalDivider()
+            Text(stringResource(R.string.host_section_reflector), style = MaterialTheme.typography.titleSmall)
+            HostField(
+                value = reflectorUrl,
+                onValueChange = { vm.reflectorUrl.value = it.trim() },
+                label = stringResource(R.string.host_field_reflector_url),
+                touchless = touchless,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = "https://i.example.com",
+                keyboardType = KeyboardType.Uri,
+                supporting = stringResource(R.string.host_reflector_supporting),
+            )
 
             HorizontalDivider()
             Text(stringResource(R.string.host_section_tmux), style = MaterialTheme.typography.titleSmall)

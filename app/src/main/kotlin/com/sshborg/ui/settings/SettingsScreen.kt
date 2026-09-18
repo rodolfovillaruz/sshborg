@@ -84,6 +84,7 @@ fun SettingsScreen(
     val isMigrating           by vm.isMigrating.collectAsState()
     val nightMode             by vm.nightMode.collectAsState()
     val allowScreenshots      by vm.allowScreenshots.collectAsState()
+    val googleEmail           by vm.googleEmail.collectAsState()
     val scrollbackLines       by vm.scrollbackLines.collectAsState()
     val terminalFontSize      by vm.terminalFontSize.collectAsState()
 
@@ -661,6 +662,27 @@ fun SettingsScreen(
                     )
                 },
             )
+
+            if (vm.googleConfigured) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.settings_google_title)) },
+                    supportingContent = {
+                        Text(googleEmail?.let { stringResource(R.string.google_signed_in_as, it) }
+                            ?: stringResource(R.string.settings_google_subtitle))
+                    },
+                    trailingContent = {
+                        if (googleEmail == null) {
+                            FocusOutlinedButton(onClick = { vm.googleSignIn() }) {
+                                Text(stringResource(R.string.settings_google_sign_in))
+                            }
+                        } else {
+                            FocusOutlinedButton(onClick = { vm.googleSignOut() }) {
+                                Text(stringResource(R.string.settings_google_sign_out))
+                            }
+                        }
+                    },
+                )
+            }
 
             ListItem(
                 headlineContent = { Text(stringResource(R.string.settings_encrypt_title)) },
