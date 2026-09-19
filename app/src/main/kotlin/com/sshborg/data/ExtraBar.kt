@@ -116,6 +116,13 @@ fun unescapeKeyText(s: String): String {
                 't'  -> { out.append('\t'); i += 2; continue }
                 'e'  -> { out.append(''); i += 2; continue }
                 '\\' -> { out.append('\\'); i += 2; continue }
+                // \cX = Ctrl+X (so tmux's prefix Ctrl+B is \cb); \xHH = any byte below 0x80.
+                'c'  -> if (i + 2 < s.length && s[i + 2].uppercaseChar() in '@'..'_') {
+                    out.append((s[i + 2].uppercaseChar().code - 64).toChar()); i += 3; continue
+                }
+                'x'  -> s.substring(i + 2, minOf(i + 4, s.length)).toIntOrNull(16)
+                    ?.takeIf { i + 4 <= s.length && it < 0x80 }
+                    ?.let { out.append(it.toChar()); i += 4; continue }
             }
         }
         out.append(c); i++
