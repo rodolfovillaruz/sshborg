@@ -1,5 +1,6 @@
 package com.sshborg.data.reflector
 
+import com.sshborg.data.db.HostDao
 import com.sshborg.data.db.HostEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,6 +13,45 @@ import java.net.URL
  * instance if it is stopped) after the user proves who they are with Google.
  */
 class HostResolver(private val auth: GoogleAuth) {
+
+    /**
+     * Makes sure the reflector's instance has a host entry, so it shows on the home screen right
+     * after sign-in. Read-only on the Worker side (`action=status` never boots the instance).
+     * Returns true if a host was added; an existing entry for the same reflector is left alone.
+     */
+    suspend fun ensureReflectorHost(dao: HostDao, reflectorUrl: String): Boolean {
+        if (!reflectorUrl.startsWith("https://")) return false
+        val url = reflectorUrl.trimEnd('/')
+        if (dao.getAllOnce().any { it.reflectorUrl?.trimEnd('/') == url }) return false
+        val name = fetchStatusName("$url/?action=status", auth.idToken())
+        dao.upsert(
+            HostEntity(
+                label = name?.takeIf { it.isNotBlank() } ?: "Reflector instance",
+                hostname = URL(url).host,   // placeholder: the reflector supplies the real IP on every connect
+                username = "ubuntu",    // AWS default; editable in the host editor
+                reflectorUrl = url,
+            ),
+        )
+        return true
+    }
+
+    private suspend fun fetchStatusName(url: String, idToken: String): String? = withContext(Dispatchers.IO) {
+        val conn = URL(url).openConnection() as HttpURLConnection
+        try {
+            conn.connectTimeout = 15_000
+            conn.readTimeout = 15_000
+            conn.setRequestProperty("Authorization", "Bearer $idToken")
+            if (conn.responseCode !in 200..299) {
+                throw ReflectorException(
+                    if (conn.responseCode == 401) "Reflector rejected this Google account"
+                    else "Reflector error (${conn.responseCode})",
+                )
+            }
+            JSONObject(conn.inputStream.bufferedReader().use { it.readText() }).optString("name").ifEmpty { null }
+        } finally {
+            conn.disconnect()
+        }
+    }
 
     /**
      * Returns [host] unchanged unless it has a [HostEntity.reflectorUrl]; otherwise a copy

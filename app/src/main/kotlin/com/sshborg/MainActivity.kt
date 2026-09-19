@@ -97,7 +97,13 @@ class MainActivity : AppCompatActivity() {
         val auth = (application as SshBorgApp).googleAuth
         if (!auth.isRedirect(uri)) return
         lifecycleScope.launch {
-            val msg = runCatching { auth.handleRedirect(uri) }.fold(
+            val app = application as SshBorgApp
+            val msg = runCatching {
+                val email = auth.handleRedirect(uri)
+                // A failure to list the instance must not turn a successful sign-in into an error.
+                runCatching { app.hostResolver.ensureReflectorHost(app.db.hostDao(), BuildConfig.GOOGLE_AUTH_BASE) }
+                email
+            }.fold(
                 onSuccess = { getString(R.string.google_signed_in_as, it) },
                 onFailure = { it.message ?: getString(R.string.google_sign_in_failed) },
             )
