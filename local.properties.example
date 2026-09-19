@@ -11,6 +11,8 @@ signing.storePassword=
 signing.keyAlias=
 signing.keyPassword=
 
-# Google OAuth client ID (type "Android", package com.sshborg) — optional, enables
-# "Sign in with Google" for hosts that get their address from a reflector.
+# Google sign-in for hosts that get their address from a reflector — optional.
+# google.clientId is a Google OAuth "Web application" client ID whose authorized redirect URI is
+# <google.authBase>/oauth/callback; google.authBase is the reflector Worker's https origin.
 # google.clientId=1234567890-abc.apps.googleusercontent.com
+# google.authBase=https://reflector.example.com
