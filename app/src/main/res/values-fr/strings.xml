@@ -100,10 +100,10 @@
     <string name="google_sign_in_failed">Échec de la connexion Google</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Lancer tmux à la connexion</string>
-    <string name="host_field_tmux_command">Commande</string>
-    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_field_tmux_command">Nom de la session</string>
+    <string name="host_tmux_command_placeholder">%1$s</string>
     <string name="host_tmux_command_placeholder_default">session</string>
-    <string name="host_tmux_command_supporting">Envoyé au shell juste après la connexion. -A se rattache à la session si elle existe déjà, sinon la crée.</string>
+    <string name="host_tmux_command_supporting">Se rattache à cette session tmux si elle existe, sinon la crée (tmux new -As).</string>
     <string name="host_section_jump_hosts">Hôtes de Saut</string>
     <string name="host_field_jump_hosts">Hôtes de saut (-J)</string>
     <string name="host_jump_hosts_placeholder">hôte1:22,utilisateur@hôte2:2222</string>

@@ -362,14 +362,15 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Command run directly as the SSH channel (no shell underneath) when [HostEntity.tmuxEnabled] is set.
-     * A custom [HostEntity.tmuxCommand] is used verbatim; otherwise defaults to attaching to
-     * (or creating) a session named after the host, so reconnecting lands back in the same one.
+     * [HostEntity.tmuxCommand] is a session name; the command is always "tmux new -As <name>", which
+     * attaches to (or creates) that session so reconnecting lands back in the same one. Blank falls
+     * back to the host label. Values saved by older versions as a full "tmux ..." command are used verbatim.
      */
     private fun tmuxCommand(host: HostEntity): String {
-        host.tmuxCommand?.takeIf { it.isNotBlank() }?.let { return it }
-        val name = host.label.ifBlank { host.hostname }
-            .lowercase()
-            .replace(Regex("[^a-z0-9_-]+"), "-")
+        val custom = host.tmuxCommand?.trim().orEmpty()
+        if (custom.startsWith("tmux ")) return custom
+        val name = custom.ifBlank { host.label.ifBlank { host.hostname } }
+            .replace(Regex("[^A-Za-z0-9_-]+"), "-")
             .trim('-')
             .ifBlank { "session" }
         return "tmux new -As $name"

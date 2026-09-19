@@ -104,10 +104,10 @@
     <string name="google_sign_in_failed">Не удалось войти через Google</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Запускать tmux при подключении</string>
-    <string name="host_field_tmux_command">Команда</string>
-    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_field_tmux_command">Имя сессии</string>
+    <string name="host_tmux_command_placeholder">%1$s</string>
     <string name="host_tmux_command_placeholder_default">сессия</string>
-    <string name="host_tmux_command_supporting">Отправляется в оболочку сразу после подключения. -A подключается к сессии, если она уже существует, иначе создаёт её.</string>
+    <string name="host_tmux_command_supporting">Подключается к этой сессии tmux, если она существует, иначе создаёт её (tmux new -As).</string>
     <string name="host_section_jump_hosts">Промежуточные хосты</string>
     <string name="host_field_jump_hosts">Промежуточные хосты (-J)</string>
     <string name="host_jump_hosts_placeholder">host1:22,user@host2:2222</string>

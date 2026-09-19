@@ -54,7 +54,7 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
     var allowLegacyCiphers = MutableStateFlow(false)
     /** If true, [tmuxCommand] is sent to the shell as soon as it connects. */
     var tmuxEnabled = MutableStateFlow(false)
-    /** Command run on connect, e.g. "tmux new -As work". Blank = "tmux new -As <label>". */
+    /** tmux session name, e.g. "work". Blank = host label. */
     var tmuxCommand = MutableStateFlow("")
     /** https URL of a reflector Worker that supplies this host's address after Google sign-in. Blank = off. */
     var reflectorUrl = MutableStateFlow("")

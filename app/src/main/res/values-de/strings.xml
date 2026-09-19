@@ -100,10 +100,10 @@
     <string name="google_sign_in_failed">Google-Anmeldung fehlgeschlagen</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Tmux beim Verbinden starten</string>
-    <string name="host_field_tmux_command">Befehl</string>
-    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_field_tmux_command">Sitzungsname</string>
+    <string name="host_tmux_command_placeholder">%1$s</string>
     <string name="host_tmux_command_placeholder_default">Sitzung</string>
-    <string name="host_tmux_command_supporting">Wird direkt nach dem Verbindungsaufbau an die Shell gesendet. -A verbindet mit der Sitzung, falls sie bereits existiert, andernfalls wird sie erstellt.</string>
+    <string name="host_tmux_command_supporting">Verbindet mit dieser tmux-Sitzung, falls sie existiert, andernfalls wird sie erstellt (tmux new -As).</string>
     <string name="host_section_jump_hosts">Jump-Hosts</string>
     <string name="host_field_jump_hosts">Jump-Hosts (-J)</string>
     <string name="host_jump_hosts_placeholder">host1:22,benutzer@host2:2222</string>

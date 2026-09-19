@@ -63,8 +63,8 @@ data class HostEntity(
     /** If true, [tmuxCommand] is sent to the shell as soon as it connects. */
     val tmuxEnabled: Boolean = false,
     /**
-     * Command run on connect when [tmuxEnabled] is set, e.g. "tmux new -As work".
-     * Null/blank falls back to "tmux new -As <label>".
+     * tmux session name used when [tmuxEnabled] is set (runs "tmux new -As <name>").
+     * Null/blank falls back to the host label.
      */
     val tmuxCommand: String? = null,
     /**

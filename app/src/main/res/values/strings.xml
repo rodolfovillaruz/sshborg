@@ -104,10 +104,10 @@
     <string name="google_sign_in_failed">Google sign-in failed</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">Launch tmux on connect</string>
-    <string name="host_field_tmux_command">Command</string>
-    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_field_tmux_command">Session name</string>
+    <string name="host_tmux_command_placeholder">%1$s</string>
     <string name="host_tmux_command_placeholder_default">session</string>
-    <string name="host_tmux_command_supporting">Sent to the shell right after connecting. -A attaches to the session if it already exists, otherwise creates it.</string>
+    <string name="host_tmux_command_supporting">Attaches to this tmux session if it exists, otherwise creates it (tmux new -As).</string>
     <string name="host_section_jump_hosts">Jump Hosts</string>
     <string name="host_field_jump_hosts">Jump hosts (-J)</string>
     <string name="host_jump_hosts_placeholder">host1:22,user@host2:2222</string>

@@ -103,10 +103,10 @@
     <string name="google_sign_in_failed">Googleログインに失敗しました</string>
     <string name="host_section_tmux">Tmux</string>
     <string name="host_tmux_enabled">接続時にtmuxを起動</string>
-    <string name="host_field_tmux_command">コマンド</string>
-    <string name="host_tmux_command_placeholder">tmux new -As %1$s</string>
+    <string name="host_field_tmux_command">セッション名</string>
+    <string name="host_tmux_command_placeholder">%1$s</string>
     <string name="host_tmux_command_placeholder_default">セッション</string>
-    <string name="host_tmux_command_supporting">接続直後にシェルへ送信されます。-A は既存のセッションがあればアタッチし、なければ新規作成します。</string>
+    <string name="host_tmux_command_supporting">この tmux セッションが存在すればアタッチし、なければ新規作成します(tmux new -As)。</string>
     <string name="host_section_jump_hosts">踏み台ホスト</string>
     <string name="host_field_jump_hosts">踏み台ホスト（-J）</string>
     <string name="host_jump_hosts_placeholder">host1:22,user@host2:2222</string>
