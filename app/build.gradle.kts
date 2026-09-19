@@ -14,8 +14,8 @@ android {
         applicationId = "com.sshborg"
         minSdk = 29
         targetSdk = 36
-        versionCode = 45
-        versionName = "1.23.0"
+        versionCode = 46
+        versionName = "1.23.1"
     }
 
     val localProps = Properties()
