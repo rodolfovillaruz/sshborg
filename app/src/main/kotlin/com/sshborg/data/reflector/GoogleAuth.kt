@@ -24,7 +24,12 @@ class NotSignedInException : Exception("Not signed in — sign in with Google in
  * without Play Services and on F-Droid builds. Yields a Google ID token that the reflector
  * Worker verifies; the refresh token is kept encrypted in [AppPreferences].
  *
- * Needs an OAuth client of type "Android" whose ID is set as `google.clientId` in local.properties.
+ * Uses a Google "Web application" client. Google redirects to `<authBase>/oauth/callback` on the
+ * reflector Worker, which hands the code back to the app via `sshborg://oauth`; the Worker also
+ * performs the code/refresh exchanges because the client secret lives only there.
+ *
+ * Configure `google.clientId` (the web client ID) and `google.authBase` (the Worker's https
+ * origin, e.g. https://i.yes.ph) in local.properties.
  */
 class GoogleAuth(private val prefs: AppPreferences) {
 
@@ -33,11 +38,14 @@ class GoogleAuth(private val prefs: AppPreferences) {
     @Volatile private var cachedIdToken: String? = null
     @Volatile private var cachedExpiryMs: Long = 0
 
-    val isConfigured: Boolean get() = BuildConfig.GOOGLE_CLIENT_ID.isNotBlank()
+    private val authBase: String get() = BuildConfig.GOOGLE_AUTH_BASE.trimEnd('/')
+
+    val isConfigured: Boolean
+        get() = BuildConfig.GOOGLE_CLIENT_ID.isNotBlank() && authBase.startsWith("https://")
 
     /** Opens the browser on Google's consent screen. The result arrives in [handleRedirect]. */
     fun startSignIn(context: Context) {
-        check(isConfigured) { "google.clientId is not set" }
+        check(isConfigured) { "google.clientId / google.authBase are not set" }
         val verifier = randomUrlSafe(48)
         val state = randomUrlSafe(16)
         pending = Pending(verifier, state)
@@ -49,6 +57,9 @@ class GoogleAuth(private val prefs: AppPreferences) {
             .appendQueryParameter("redirect_uri", redirectUri())
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("scope", "openid email")
+            // Web clients only issue a refresh token for offline access, and only on a consent screen.
+            .appendQueryParameter("access_type", "offline")
+            .appendQueryParameter("prompt", "consent")
             .appendQueryParameter("code_challenge", challenge)
             .appendQueryParameter("code_challenge_method", "S256")
             .appendQueryParameter("state", state)
@@ -58,7 +69,7 @@ class GoogleAuth(private val prefs: AppPreferences) {
 
     /** True if [uri] is this app's OAuth redirect. */
     fun isRedirect(uri: Uri?): Boolean =
-        isConfigured && uri != null && uri.scheme == redirectScheme() && uri.path == REDIRECT_PATH
+        uri != null && uri.scheme == APP_SCHEME && uri.host == APP_HOST
 
     /** Completes sign-in from the redirect. Returns the signed-in email. */
     suspend fun handleRedirect(uri: Uri): String {
@@ -67,12 +78,7 @@ class GoogleAuth(private val prefs: AppPreferences) {
         uri.getQueryParameter("error")?.let { error("Google sign-in failed: $it") }
         if (uri.getQueryParameter("state") != p.state) error("Sign-in state mismatch")
         val code = uri.getQueryParameter("code") ?: error("Sign-in returned no code")
-        val json = postForm(
-            "code" to code,
-            "code_verifier" to p.verifier,
-            "grant_type" to "authorization_code",
-            "redirect_uri" to redirectUri(),
-        )
+        val json = postJson("/oauth/token", "code" to code, "code_verifier" to p.verifier)
         val refresh = json.optString("refresh_token")
         if (refresh.isEmpty()) error("Google returned no refresh token")
         val idToken = json.getString("id_token")
@@ -86,7 +92,7 @@ class GoogleAuth(private val prefs: AppPreferences) {
         cachedIdToken?.takeIf { System.currentTimeMillis() < cachedExpiryMs - EXPIRY_MARGIN_MS }?.let { return it }
         val blob = prefs.googleRefreshToken.first() ?: throw NotSignedInException()
         val json = try {
-            postForm("refresh_token" to KeystoreManager.decrypt(blob), "grant_type" to "refresh_token")
+            postJson("/oauth/refresh", "refresh_token" to KeystoreManager.decrypt(blob))
         } catch (e: InvalidGrantException) {
             signOut()   // revoked or expired: force a clean re-sign-in instead of failing forever
             throw NotSignedInException()
@@ -114,16 +120,15 @@ class GoogleAuth(private val prefs: AppPreferences) {
 
     private class InvalidGrantException : Exception()
 
-    private suspend fun postForm(vararg fields: Pair<String, String>): JSONObject = withContext(Dispatchers.IO) {
-        val all = listOf("client_id" to BuildConfig.GOOGLE_CLIENT_ID) + fields
-        val body = all.joinToString("&") { (k, v) -> "$k=${URLEncoder.encode(v, "UTF-8")}" }
-        val conn = URL(TOKEN_ENDPOINT).openConnection() as HttpURLConnection
+    private suspend fun postJson(path: String, vararg fields: Pair<String, String>): JSONObject = withContext(Dispatchers.IO) {
+        val body = JSONObject().apply { fields.forEach { (k, v) -> put(k, v) } }.toString()
+        val conn = URL(authBase + path).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
             conn.doOutput = true
             conn.connectTimeout = 15_000
             conn.readTimeout = 15_000
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            conn.setRequestProperty("Content-Type", "application/json")
             conn.outputStream.use { it.write(body.toByteArray()) }
             val ok = conn.responseCode in 200..299
             val text = (if (ok) conn.inputStream else conn.errorStream)?.bufferedReader()?.use { it.readText() } ?: ""
@@ -131,7 +136,7 @@ class GoogleAuth(private val prefs: AppPreferences) {
                 if (runCatching { JSONObject(text).optString("error") }.getOrNull() == "invalid_grant") {
                     throw InvalidGrantException()
                 }
-                error("Google token request failed (${conn.responseCode})")
+                error("Sign-in request failed (${conn.responseCode})")
             }
             JSONObject(text)
         } finally {
@@ -139,18 +144,15 @@ class GoogleAuth(private val prefs: AppPreferences) {
         }
     }
 
-    private fun redirectScheme(): String =
-        "com.googleusercontent.apps." + BuildConfig.GOOGLE_CLIENT_ID.removeSuffix(".apps.googleusercontent.com")
-
-    private fun redirectUri(): String = "${redirectScheme()}:$REDIRECT_PATH"
+    private fun redirectUri(): String = "$authBase/oauth/callback"
 
     private fun randomUrlSafe(bytes: Int): String =
         Base64.encodeToString(ByteArray(bytes).also { SecureRandom().nextBytes(it) }, URL_SAFE)
 
     private companion object {
         const val AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
-        const val TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
-        const val REDIRECT_PATH = "/oauth2redirect"
+        const val APP_SCHEME = "sshborg"
+        const val APP_HOST = "oauth"
         const val EXPIRY_MARGIN_MS = 60_000L
         const val URL_SAFE = Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
     }

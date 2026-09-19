@@ -63,8 +63,10 @@ jobs:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          # Public OAuth client ID (not a secret); a repository *variable*. Unset = Google sign-in stays hidden.
+          # Public values (not secrets), set as repository *variables*: the Google Web client ID and the
+          # reflector Worker's https origin. Either unset = Google sign-in stays hidden.
           GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_AUTH_BASE: ${{ vars.GOOGLE_AUTH_BASE }}
         run: |
           cat > local.properties <<EOF
           signing.storeFile=${KEYSTORE_PATH}
@@ -72,8 +74,9 @@ jobs:
           signing.keyAlias=${KEY_ALIAS}
           signing.keyPassword=${KEY_PASSWORD}
           EOF
-          if [ -n "$GOOGLE_CLIENT_ID" ]; then
+          if [ -n "$GOOGLE_CLIENT_ID" ] && [ -n "$GOOGLE_AUTH_BASE" ]; then
             echo "google.clientId=${GOOGLE_CLIENT_ID}" >> local.properties
+            echo "google.authBase=${GOOGLE_AUTH_BASE}" >> local.properties
           fi
 
       - name: Assemble release APK
