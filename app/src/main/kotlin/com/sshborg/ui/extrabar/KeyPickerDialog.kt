@@ -34,6 +34,8 @@ import com.sshborg.data.BarAction
 import com.sshborg.data.ExtraKeyDef
 import com.sshborg.data.ModKey
 import com.sshborg.data.SpecialKey
+import com.sshborg.data.formatKeyAlts
+import com.sshborg.data.parseKeyAlts
 import com.sshborg.isTouchless
 import com.sshborg.ui.common.TvTapField
 
@@ -66,7 +68,7 @@ fun KeyPickerDialog(
     val initialText = initial as? ExtraKeyDef.Text
     var text by remember { mutableStateOf(initialText?.text ?: "") }
     var label by remember { mutableStateOf(initialText?.label ?: "") }
-    var alts by remember { mutableStateOf(initialText?.alts?.joinToString(" ") ?: "") }
+    var alts by remember { mutableStateOf(formatKeyAlts(initialText?.alts ?: emptyList())) }
 
     val navigation = listOf(SpecialKey.LEFT, SpecialKey.UP, SpecialKey.DOWN, SpecialKey.RIGHT,
         SpecialKey.HOME, SpecialKey.END, SpecialKey.PGUP, SpecialKey.PGDN)
@@ -120,7 +122,7 @@ fun KeyPickerDialog(
                     OutlinedTextField(value = label, onValueChange = { label = it }, singleLine = true,
                         label = { Text(stringResource(R.string.extra_key_label)) }, modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(value = alts, onValueChange = { alts = it }, singleLine = true,
+                    OutlinedTextField(value = alts, onValueChange = { alts = it }, minLines = 2,
                         label = { Text(stringResource(R.string.extra_key_alts)) }, modifier = Modifier.fillMaxWidth())
                 }
                 Text(
@@ -130,7 +132,7 @@ fun KeyPickerDialog(
                     modifier = Modifier.padding(top = 4.dp),
                 )
                 Button(
-                    onClick = { onPick(ExtraKeyDef.Text(text, label.trim().ifEmpty { null }, alts.trim().split(Regex("\\s+")).filter { it.isNotEmpty() })) },
+                    onClick = { onPick(ExtraKeyDef.Text(text, label.trim().ifEmpty { null }, parseKeyAlts(alts))) },
                     enabled = text.isNotEmpty(),
                     modifier = Modifier.align(Alignment.End).padding(top = 8.dp),
                 ) { Text(stringResource(R.string.extra_key_use_text)) }

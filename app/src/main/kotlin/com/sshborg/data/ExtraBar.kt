@@ -86,7 +86,7 @@ sealed class ExtraKeyDef {
     data class Special(val key: SpecialKey, val label: String? = null) : ExtraKeyDef()
     data class Modifier(val mod: ModKey) : ExtraKeyDef()
     /** Literal text sent as-is; `\n \t \e \\` escapes are expanded by [unescaped]. */
-    data class Text(val text: String, val label: String? = null, val alts: List<String> = emptyList()) : ExtraKeyDef() {
+    data class Text(val text: String, val label: String? = null, val alts: List<KeyAlt> = emptyList()) : ExtraKeyDef() {
         val unescaped: String get() = unescapeKeyText(text)
     }
     data class Action(val action: BarAction) : ExtraKeyDef()
@@ -101,6 +101,27 @@ sealed class ExtraKeyDef {
         }
 
     val repeatOnHold: Boolean get() = this is Special && key.repeat
+}
+
+/** One entry of a key's hold popup: what it sends and, optionally, its own label. */
+data class KeyAlt(val text: String, val label: String? = null) {
+    /** Chip caption: the label if set, else the text made printable. */
+    val display: String
+        get() = label?.takeIf { it.isNotBlank() } ?: unescapeKeyText(text).replace("\n", "⏎")
+}
+
+private const val ALT_SEP = " => "
+
+/** Editor text form of the popup entries: one per line, `label => text` or just `text`. */
+fun formatKeyAlts(alts: List<KeyAlt>): String =
+    alts.joinToString("\n") { a -> if (a.label.isNullOrBlank()) a.text else "${a.label}$ALT_SEP${a.text}" }
+
+fun parseKeyAlts(s: String): List<KeyAlt> = s.lines().mapNotNull { line ->
+    if (line.isBlank()) return@mapNotNull null
+    val i = line.indexOf(ALT_SEP)
+    if (i > 0 && i + ALT_SEP.length < line.length)
+        KeyAlt(line.substring(i + ALT_SEP.length), line.substring(0, i).trim().ifEmpty { null })
+    else KeyAlt(line.trim())
 }
 
 fun unescapeKeyText(s: String): String {
@@ -265,7 +286,9 @@ object ExtraBarJson {
             is ExtraKeyDef.Modifier -> { put("k", "mod");     put("v", k.mod.name) }
             is ExtraKeyDef.Text     -> {
                 put("k", "text"); put("v", k.text); k.label?.let { put("l", it) }
-                if (k.alts.isNotEmpty()) put("a", JSONArray(k.alts))
+                if (k.alts.isNotEmpty()) put("a", JSONArray().apply {
+                    k.alts.forEach { a -> put(JSONObject().apply { put("v", a.text); a.label?.let { put("l", it) } }) }
+                })
             }
             is ExtraKeyDef.Action   -> { put("k", "action");  put("v", k.action.name) }
         }
@@ -278,7 +301,12 @@ object ExtraBarJson {
             "special" -> runCatching { SpecialKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Special(it, label) }
             "mod"     -> runCatching { ModKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Modifier(it) }
             "text"    -> ExtraKeyDef.Text(v, label, o.optJSONArray("a")?.let { a ->
-                (0 until a.length()).map { a.optString(it) }.filter { it.isNotEmpty() }
+                // Older builds stored plain strings; objects carry their own label.
+                (0 until a.length()).mapNotNull { j ->
+                    val e = a.optJSONObject(j)
+                    if (e != null) KeyAlt(e.optString("v"), if (e.has("l")) e.optString("l") else null)
+                    else KeyAlt(a.optString(j))
+                }.filter { it.text.isNotEmpty() }
             } ?: emptyList())
             "action"  -> runCatching { BarAction.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Action(it) }
             else      -> null

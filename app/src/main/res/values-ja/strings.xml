@@ -462,7 +462,7 @@
     <string name="extra_key_group_custom">カスタムテキスト</string>
     <string name="extra_key_text">送信するテキスト</string>
     <string name="extra_key_label">ラベル（任意）</string>
-    <string name="extra_key_alts">長押しの代替入力（任意、スペース区切り）</string>
+    <string name="extra_key_alts">長押しポップアップのキー（任意、1行に1つ：ラベル =&gt; テキスト）</string>
     <string name="extra_key_text_hint">\\n = Enter、\\t = Tab、\\e = Esc。複数文字でマクロになります。</string>
     <string name="extra_key_use_text">テキストを使用</string>
     <string name="extra_key_action_paste">貼り付け</string>

@@ -471,7 +471,7 @@
     <string name="extra_key_group_custom">Свой текст</string>
     <string name="extra_key_text">Текст для отправки</string>
     <string name="extra_key_label">Подпись (необязательно)</string>
-    <string name="extra_key_alts">Варианты при удержании (необязательно, через пробел)</string>
+    <string name="extra_key_alts">Клавиши при удержании (необязательно, по одной в строке: подпись =&gt; текст)</string>
     <string name="extra_key_text_hint">\\n = Enter, \\t = Tab, \\e = Esc. Несколько символов образуют макрос.</string>
     <string name="extra_key_use_text">Использовать текст</string>
     <string name="extra_key_action_paste">Вставить</string>

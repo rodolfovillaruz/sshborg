@@ -69,6 +69,7 @@ import com.sshborg.data.BarAction
 import com.sshborg.data.ExtraBar
 import com.sshborg.data.ExtraBarPresets
 import com.sshborg.data.ExtraKeyDef
+import com.sshborg.data.KeyAlt
 import com.sshborg.data.ModKey
 import com.sshborg.data.unescapeKeyText
 import kotlinx.coroutines.coroutineScope
@@ -227,7 +228,7 @@ private fun RowScope.ExtraKeyItem(
             label = key.displayLabel, fontSize = fontSize, modifier = modifier, hPad = hPad,
             active = highlighted,
             alts = if (editing) emptyList() else key.alts,
-            onAlt = { state.onKey(unescapeKeyText(it).toByteArray(Charsets.UTF_8)) },
+            onAlt = { state.onKey(unescapeKeyText(it.text).toByteArray(Charsets.UTF_8)) },
             onClick = click { state.onKey(key.unescaped.toByteArray(Charsets.UTF_8)) },
         )
         is ExtraKeyDef.Action -> when (key.action) {
@@ -317,8 +318,8 @@ private fun ExtraKey(
     repeatOnHold: Boolean = false,
     // Hold popup (Termux style): keep pressing to open a row of alternatives above the
     // key, slide up onto one and release to send it. Releasing elsewhere sends nothing.
-    alts: List<String> = emptyList(),
-    onAlt: (String) -> Unit = {},
+    alts: List<KeyAlt> = emptyList(),
+    onAlt: (KeyAlt) -> Unit = {},
     onClick: () -> Unit,
 ) {
     val bg        = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
@@ -458,7 +459,7 @@ private fun ExtraKey(
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
-                                unescapeKeyText(alt).replace("\n", "⏎").take(6),
+                                alt.display.take(6),
                                 fontSize = 16.sp, maxLines = 1,
                                 color = if (i == holdSelected) MaterialTheme.colorScheme.onPrimaryContainer
                                         else MaterialTheme.colorScheme.onSurface,
