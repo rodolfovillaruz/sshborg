@@ -2,6 +2,7 @@ package com.sshborg.ui.terminal
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -442,7 +443,8 @@ private fun ExtraKey(
             }) {
                 Row(
                     Modifier
-                        .background(MaterialTheme.colorScheme.inverseSurface, MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.surface, MaterialTheme.shapes.small)
+                        .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.small)
                         .padding(2.dp),
                 ) {
                     alts.forEachIndexed { i, alt ->
@@ -450,7 +452,7 @@ private fun ExtraKey(
                             Modifier
                                 .size(HoldChipWidth, 44.dp)
                                 .background(
-                                    if (i == holdSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    if (i == holdSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                                     MaterialTheme.shapes.extraSmall,
                                 ),
                             contentAlignment = Alignment.Center,
@@ -458,8 +460,8 @@ private fun ExtraKey(
                             Text(
                                 unescapeKeyText(alt).replace("\n", "⏎").take(6),
                                 fontSize = 16.sp, maxLines = 1,
-                                color = if (i == holdSelected) MaterialTheme.colorScheme.onPrimary
-                                        else MaterialTheme.colorScheme.inverseOnSurface,
+                                color = if (i == holdSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                        else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
