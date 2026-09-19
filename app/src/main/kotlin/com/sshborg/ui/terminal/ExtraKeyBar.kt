@@ -34,6 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,7 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -60,10 +69,12 @@ import com.sshborg.data.ExtraBar
 import com.sshborg.data.ExtraBarPresets
 import com.sshborg.data.ExtraKeyDef
 import com.sshborg.data.ModKey
+import com.sshborg.data.unescapeKeyText
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 private val ExtraKeyFont = FontFamily(
     Font(R.font.roboto_condensed_regular),
@@ -214,6 +225,8 @@ private fun RowScope.ExtraKeyItem(
         is ExtraKeyDef.Text -> ExtraKey(
             label = key.displayLabel, fontSize = fontSize, modifier = modifier, hPad = hPad,
             active = highlighted,
+            alts = if (editing) emptyList() else key.alts,
+            onAlt = { state.onKey(unescapeKeyText(it).toByteArray(Charsets.UTF_8)) },
             onClick = click { state.onKey(key.unescaped.toByteArray(Charsets.UTF_8)) },
         )
         is ExtraKeyDef.Action -> when (key.action) {
@@ -301,11 +314,18 @@ private fun ExtraKey(
     // Hold-to-repeat, like the keyboard's own backspace (issue #11): tap = one press,
     // hold = keep firing until released. Off by default so ordinary keys still tap once.
     repeatOnHold: Boolean = false,
+    // Hold popup (Termux style): keep pressing to open a row of alternatives above the
+    // key, slide up onto one and release to send it. Releasing elsewhere sends nothing.
+    alts: List<String> = emptyList(),
+    onAlt: (String) -> Unit = {},
     onClick: () -> Unit,
 ) {
     val bg        = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
     val textColor = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     val interaction = remember { MutableInteractionSource() }
+    var holdOpen by remember { mutableStateOf(false) }
+    var holdSelected by remember { mutableIntStateOf(-1) }
+    var holdLeft by remember { mutableFloatStateOf(0f) }   // popup's left edge, key-relative
     // For repeat keys we drive the gesture ourselves (fire on down, then auto-repeat),
     // so clickable is replaced by pointerInput + an explicit ripple to keep the press
     // feedback. Timings follow the system key-repeat values, matching backspace.
@@ -350,6 +370,45 @@ private fun ExtraKey(
                     }
                 }
             }
+    } else if (alts.isNotEmpty()) {
+        Modifier
+            .indication(interaction, ripple())
+            .pointerInput(alts) {
+                val chipPx = HoldChipWidth.toPx()
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val press = PressInteraction.Press(down.position)
+                    interaction.tryEmit(press)
+                    // true = released, false = cancelled (e.g. the row scrolled), null = held
+                    val outcome = withTimeoutOrNull(viewConfiguration.longPressTimeoutMillis) {
+                        waitForUpOrCancellation()?.let { true } ?: false
+                    }
+                    if (outcome != null) {
+                        interaction.tryEmit(
+                            if (outcome) PressInteraction.Release(press) else PressInteraction.Cancel(press)
+                        )
+                        if (outcome) click.value()
+                        return@awaitEachGesture
+                    }
+                    holdSelected = -1
+                    holdOpen = true
+                    var chosen = -1
+                    try {
+                        while (true) {
+                            val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                            change.consume()
+                            if (!change.pressed) break
+                            val p = change.position
+                            chosen = if (p.y < 0f) ((p.x - holdLeft) / chipPx).toInt().takeIf { it in alts.indices } ?: -1 else -1
+                            holdSelected = chosen
+                        }
+                    } finally {
+                        holdOpen = false
+                        interaction.tryEmit(PressInteraction.Release(press))
+                    }
+                    if (chosen >= 0) onAlt(alts[chosen])
+                }
+            }
     } else {
         Modifier.clickable(onClick = onClick)
     }
@@ -368,5 +427,46 @@ private fun ExtraKey(
             maxLines = 1,
             color = textColor,
         )
+        if (holdOpen) {
+            Popup(popupPositionProvider = remember {
+                object : PopupPositionProvider {
+                    override fun calculatePosition(
+                        anchorBounds: IntRect, windowSize: IntSize,
+                        layoutDirection: LayoutDirection, popupContentSize: IntSize,
+                    ): IntOffset {
+                        val x = anchorBounds.left.coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
+                        holdLeft = (x - anchorBounds.left).toFloat()
+                        return IntOffset(x, anchorBounds.top - popupContentSize.height)
+                    }
+                }
+            }) {
+                Row(
+                    Modifier
+                        .background(MaterialTheme.colorScheme.inverseSurface, MaterialTheme.shapes.small)
+                        .padding(2.dp),
+                ) {
+                    alts.forEachIndexed { i, alt ->
+                        Box(
+                            Modifier
+                                .size(HoldChipWidth, 44.dp)
+                                .background(
+                                    if (i == holdSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    MaterialTheme.shapes.extraSmall,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                unescapeKeyText(alt).replace("\n", "⏎").take(6),
+                                fontSize = 16.sp, maxLines = 1,
+                                color = if (i == holdSelected) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.inverseOnSurface,
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+private val HoldChipWidth = 44.dp

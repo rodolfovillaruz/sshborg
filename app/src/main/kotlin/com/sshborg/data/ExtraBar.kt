@@ -86,7 +86,7 @@ sealed class ExtraKeyDef {
     data class Special(val key: SpecialKey, val label: String? = null) : ExtraKeyDef()
     data class Modifier(val mod: ModKey) : ExtraKeyDef()
     /** Literal text sent as-is; `\n \t \e \\` escapes are expanded by [unescaped]. */
-    data class Text(val text: String, val label: String? = null) : ExtraKeyDef() {
+    data class Text(val text: String, val label: String? = null, val alts: List<String> = emptyList()) : ExtraKeyDef() {
         val unescaped: String get() = unescapeKeyText(text)
     }
     data class Action(val action: BarAction) : ExtraKeyDef()
@@ -256,7 +256,10 @@ object ExtraBarJson {
         when (k) {
             is ExtraKeyDef.Special  -> { put("k", "special"); put("v", k.key.name); k.label?.let { put("l", it) } }
             is ExtraKeyDef.Modifier -> { put("k", "mod");     put("v", k.mod.name) }
-            is ExtraKeyDef.Text     -> { put("k", "text");    put("v", k.text);     k.label?.let { put("l", it) } }
+            is ExtraKeyDef.Text     -> {
+                put("k", "text"); put("v", k.text); k.label?.let { put("l", it) }
+                if (k.alts.isNotEmpty()) put("a", JSONArray(k.alts))
+            }
             is ExtraKeyDef.Action   -> { put("k", "action");  put("v", k.action.name) }
         }
     }
@@ -267,7 +270,9 @@ object ExtraBarJson {
         return when (o.optString("k")) {
             "special" -> runCatching { SpecialKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Special(it, label) }
             "mod"     -> runCatching { ModKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Modifier(it) }
-            "text"    -> ExtraKeyDef.Text(v, label)
+            "text"    -> ExtraKeyDef.Text(v, label, o.optJSONArray("a")?.let { a ->
+                (0 until a.length()).map { a.optString(it) }.filter { it.isNotEmpty() }
+            } ?: emptyList())
             "action"  -> runCatching { BarAction.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Action(it) }
             else      -> null
         }
