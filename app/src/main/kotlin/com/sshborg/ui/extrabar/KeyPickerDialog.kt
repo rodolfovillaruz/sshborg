@@ -68,7 +68,12 @@ fun KeyPickerDialog(
     val initialText = initial as? ExtraKeyDef.Text
     var text by remember { mutableStateOf(initialText?.text ?: "") }
     var label by remember { mutableStateOf(initialText?.label ?: "") }
-    var alts by remember { mutableStateOf(formatKeyAlts(initialText?.alts ?: emptyList())) }
+    var alts by remember {
+        mutableStateOf(formatKeyAlts(initialText?.alts ?: (initial as? ExtraKeyDef.Special)?.alts ?: emptyList()))
+    }
+    // The hold popup is independent of what the key itself sends, so it's set once up top
+    // and rides along with whichever key is picked (catalogue chip or custom text).
+    fun special(k: SpecialKey) = ExtraKeyDef.Special(k, alts = parseKeyAlts(alts))
 
     val navigation = listOf(SpecialKey.LEFT, SpecialKey.UP, SpecialKey.DOWN, SpecialKey.RIGHT,
         SpecialKey.HOME, SpecialKey.END, SpecialKey.PGUP, SpecialKey.PGDN)
@@ -83,17 +88,36 @@ fun KeyPickerDialog(
         title = { Text(stringResource(R.string.extra_key_picker_title)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()).imePadding()) {
+                Text(
+                    stringResource(R.string.extra_key_group_popup),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                if (touchless) {
+                    TvTapField(value = alts, onValueChange = { alts = it },
+                        label = stringResource(R.string.extra_key_alts), modifier = Modifier.fillMaxWidth())
+                } else {
+                    OutlinedTextField(value = alts, onValueChange = { alts = it }, minLines = 2,
+                        label = { Text(stringResource(R.string.extra_key_alts)) }, modifier = Modifier.fillMaxWidth())
+                }
+                Text(
+                    stringResource(R.string.extra_key_alts_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
                 Group(stringResource(R.string.extra_key_group_navigation)) {
-                    navigation.forEach { k -> Chip(k.label) { onPick(ExtraKeyDef.Special(k)) } }
+                    navigation.forEach { k -> Chip(k.label) { onPick(special(k)) } }
                 }
                 Group(stringResource(R.string.extra_key_group_editing)) {
-                    editing.forEach { k -> Chip(k.label) { onPick(ExtraKeyDef.Special(k)) } }
+                    editing.forEach { k -> Chip(k.label) { onPick(special(k)) } }
                 }
                 Group(stringResource(R.string.extra_key_group_modifiers)) {
                     ModKey.entries.forEach { m -> Chip(m.label) { onPick(ExtraKeyDef.Modifier(m)) } }
                 }
                 Group(stringResource(R.string.extra_key_group_function)) {
-                    fKeys.forEach { k -> Chip(k.label) { onPick(ExtraKeyDef.Special(k)) } }
+                    fKeys.forEach { k -> Chip(k.label) { onPick(special(k)) } }
                 }
                 Group(stringResource(R.string.extra_key_group_actions)) {
                     BarAction.entries.forEach { a -> Chip(barActionName(a)) { onPick(ExtraKeyDef.Action(a)) } }
@@ -112,18 +136,12 @@ fun KeyPickerDialog(
                     Spacer(Modifier.height(8.dp))
                     TvTapField(value = label, onValueChange = { label = it },
                         label = stringResource(R.string.extra_key_label), modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(8.dp))
-                    TvTapField(value = alts, onValueChange = { alts = it },
-                        label = stringResource(R.string.extra_key_alts), modifier = Modifier.fillMaxWidth())
                 } else {
                     OutlinedTextField(value = text, onValueChange = { text = it }, singleLine = true,
                         label = { Text(stringResource(R.string.extra_key_text)) }, modifier = Modifier.fillMaxWidth())
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = label, onValueChange = { label = it }, singleLine = true,
                         label = { Text(stringResource(R.string.extra_key_label)) }, modifier = Modifier.fillMaxWidth())
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(value = alts, onValueChange = { alts = it }, minLines = 2,
-                        label = { Text(stringResource(R.string.extra_key_alts)) }, modifier = Modifier.fillMaxWidth())
                 }
                 Text(
                     stringResource(R.string.extra_key_text_hint),

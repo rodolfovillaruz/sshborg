@@ -216,7 +216,11 @@ private fun RowScope.ExtraKeyItem(
     when (key) {
         is ExtraKeyDef.Special -> ExtraKey(
             label = key.displayLabel, fontSize = fontSize, modifier = modifier, hPad = hPad,
-            active = highlighted, isArrow = key.key.isArrow, repeatOnHold = key.repeatOnHold && !editing,
+            active = highlighted, isArrow = key.key.isArrow,
+            // Hold can't both repeat and open a popup; a configured popup wins.
+            repeatOnHold = key.repeatOnHold && !editing && key.alts.isEmpty(),
+            alts = if (editing) emptyList() else key.alts,
+            onAlt = { state.onKey(unescapeKeyText(it.text).toByteArray(Charsets.UTF_8)) },
             onClick = click { state.onKey(key.key.bytes(state.cursorKeys)) },
         )
         is ExtraKeyDef.Modifier -> ExtraKey(
