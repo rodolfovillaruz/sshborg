@@ -83,7 +83,7 @@ enum class ModKey(val label: String) { CTRL("Ctrl"), ALT("Alt") }
 enum class BarAction { PASTE, PIN, WORD_MODE, SWITCH_BAR, KEYBOARD }
 
 sealed class ExtraKeyDef {
-    data class Special(val key: SpecialKey, val label: String? = null) : ExtraKeyDef()
+    data class Special(val key: SpecialKey, val label: String? = null, val alts: List<KeyAlt> = emptyList()) : ExtraKeyDef()
     data class Modifier(val mod: ModKey) : ExtraKeyDef()
     /** Literal text sent as-is; `\n \t \e \\` escapes are expanded by [unescaped]. */
     data class Text(val text: String, val label: String? = null, val alts: List<KeyAlt> = emptyList()) : ExtraKeyDef() {
@@ -282,32 +282,40 @@ object ExtraBarJson {
 
     private fun encodeKey(k: ExtraKeyDef): JSONObject = JSONObject().apply {
         when (k) {
-            is ExtraKeyDef.Special  -> { put("k", "special"); put("v", k.key.name); k.label?.let { put("l", it) } }
+            is ExtraKeyDef.Special  -> {
+                put("k", "special"); put("v", k.key.name); k.label?.let { put("l", it) }
+                encodeAlts(k.alts)?.let { put("a", it) }
+            }
             is ExtraKeyDef.Modifier -> { put("k", "mod");     put("v", k.mod.name) }
             is ExtraKeyDef.Text     -> {
                 put("k", "text"); put("v", k.text); k.label?.let { put("l", it) }
-                if (k.alts.isNotEmpty()) put("a", JSONArray().apply {
-                    k.alts.forEach { a -> put(JSONObject().apply { put("v", a.text); a.label?.let { put("l", it) } }) }
-                })
+                encodeAlts(k.alts)?.let { put("a", it) }
             }
             is ExtraKeyDef.Action   -> { put("k", "action");  put("v", k.action.name) }
         }
     }
 
+    private fun encodeAlts(alts: List<KeyAlt>): JSONArray? =
+        if (alts.isEmpty()) null else JSONArray().apply {
+            alts.forEach { a -> put(JSONObject().apply { put("v", a.text); a.label?.let { put("l", it) } }) }
+        }
+
+    private fun decodeAlts(a: JSONArray?): List<KeyAlt> = a?.let {
+        // Older builds stored plain strings; objects carry their own label.
+        (0 until it.length()).mapNotNull { j ->
+            val e = it.optJSONObject(j)
+            if (e != null) KeyAlt(e.optString("v"), if (e.has("l")) e.optString("l") else null)
+            else KeyAlt(it.optString(j))
+        }.filter { e -> e.text.isNotEmpty() }
+    } ?: emptyList()
+
     private fun decodeKey(o: JSONObject): ExtraKeyDef? {
         val v = o.optString("v")
         val label = if (o.has("l")) o.optString("l") else null
         return when (o.optString("k")) {
-            "special" -> runCatching { SpecialKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Special(it, label) }
+            "special" -> runCatching { SpecialKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Special(it, label, decodeAlts(o.optJSONArray("a"))) }
             "mod"     -> runCatching { ModKey.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Modifier(it) }
-            "text"    -> ExtraKeyDef.Text(v, label, o.optJSONArray("a")?.let { a ->
-                // Older builds stored plain strings; objects carry their own label.
-                (0 until a.length()).mapNotNull { j ->
-                    val e = a.optJSONObject(j)
-                    if (e != null) KeyAlt(e.optString("v"), if (e.has("l")) e.optString("l") else null)
-                    else KeyAlt(a.optString(j))
-                }.filter { it.text.isNotEmpty() }
-            } ?: emptyList())
+            "text"    -> ExtraKeyDef.Text(v, label, decodeAlts(o.optJSONArray("a")))
             "action"  -> runCatching { BarAction.valueOf(v) }.getOrNull()?.let { ExtraKeyDef.Action(it) }
             else      -> null
         }
