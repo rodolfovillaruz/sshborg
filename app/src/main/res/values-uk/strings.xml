@@ -116,6 +116,8 @@
     <string name="host_reset_host_keys">Скинути прийняті ключі хостів</string>
     <string name="host_reset_host_keys_pending">Ключі буде скинуто під час збереження</string>
     <string name="host_reset_host_keys_hint">Забуває збережений ключ хоста та кешовані ключі проміжних хостів. Наступне зʼєднання знову перевірить сервер.</string>
+    <string name="host_ec2_linked">Пов’язано з екземпляром EC2 %1$s. Booter підтримує адресу в актуальному стані.</string>
+    <string name="host_ec2_unlink">Від’єднати</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">SSH-ключі</string>

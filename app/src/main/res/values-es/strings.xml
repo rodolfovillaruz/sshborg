@@ -116,6 +116,8 @@
     <string name="host_reset_host_keys">Restablecer claves de host aceptadas</string>
     <string name="host_reset_host_keys_pending">Las claves se restablecerán al guardar</string>
     <string name="host_reset_host_keys_hint">Olvida la clave de host guardada y las claves de host de salto en caché. La próxima conexión verificará el servidor de nuevo.</string>
+    <string name="host_ec2_linked">Vinculado a la instancia EC2 %1$s. Booter mantiene su dirección actualizada.</string>
+    <string name="host_ec2_unlink">Desvincular</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">Claves SSH</string>

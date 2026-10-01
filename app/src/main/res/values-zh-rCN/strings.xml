@@ -119,6 +119,8 @@
     <string name="host_reset_host_keys">重置已接受的主机密钥</string>
     <string name="host_reset_host_keys_pending">保存时将重置密钥</string>
     <string name="host_reset_host_keys_hint">忘记已保存的主机密钥和缓存的跳板主机密钥。下次连接时将重新验证服务器。</string>
+    <string name="host_ec2_linked">已关联 EC2 实例 %1$s。Booter 会保持其地址为最新。</string>
+    <string name="host_ec2_unlink">取消关联</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">SSH 密钥</string>

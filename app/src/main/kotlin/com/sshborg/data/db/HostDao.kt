@@ -14,6 +14,12 @@ interface HostDao {
     @Query("SELECT * FROM hosts WHERE id = :id")
     suspend fun getById(id: Long): HostEntity?
 
+    @Query("SELECT * FROM hosts WHERE ec2InstanceId = :instanceId LIMIT 1")
+    suspend fun getByEc2InstanceId(instanceId: String): HostEntity?
+
+    @Query("SELECT * FROM hosts WHERE hostname = :hostname AND ec2InstanceId IS NULL LIMIT 1")
+    suspend fun getUnlinkedByHostname(hostname: String): HostEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(host: HostEntity): Long
 

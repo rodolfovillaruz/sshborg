@@ -1,6 +1,7 @@
 package com.sshborg
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -73,6 +74,12 @@ class MainActivity : AppCompatActivity() {
         data class System(val allowDeviceCredential: Boolean) : Gate
     }
 
+    /**
+     * A request from Booter waiting to be opened. Handed to the app only once the lock gate is
+     * down, so nothing connects — and no host-key prompt opens — behind the lock.
+     */
+    private val pendingEc2Launch = mutableStateOf<Ec2Launch?>(null)
+
     private val requestNotificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
 
@@ -85,6 +92,8 @@ class MainActivity : AppCompatActivity() {
         ) {
             requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+        // Not on a recreation: the intent is the one that was already handled.
+        if (savedInstanceState == null) pendingEc2Launch.value = Ec2Launch.from(intent)
         val prefs = (application as SshBorgApp).appPreferences
         setContent {
             val nightMode by prefs.nightMode.collectAsState(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
@@ -95,7 +104,10 @@ class MainActivity : AppCompatActivity() {
                 val coverColor = MaterialTheme.colorScheme.background
                 LaunchedEffect(coverColor) { privacyOverlay?.setBackgroundColor(coverColor.toArgb()) }
                 Box(Modifier.fillMaxSize()) {
-                    AppNavigation()
+                    AppNavigation(
+                        ec2Launch = pendingEc2Launch.value.takeIf { gate.value == null },
+                        onEc2LaunchTaken = { pendingEc2Launch.value = null },
+                    )
                     // Opaque lock gate on top of (and preserving) the live app content.
                     when (val g = gate.value) {
                         is Gate.Secret -> {
@@ -129,6 +141,13 @@ class MainActivity : AppCompatActivity() {
         }
         window.addContentView(overlay, android.view.ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         privacyOverlay = overlay
+    }
+
+    /** Booter again while the app is open (launchMode singleTop). */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        Ec2Launch.from(intent)?.let { pendingEc2Launch.value = it }
     }
 
     private fun setPrivacy(locked: Boolean) {

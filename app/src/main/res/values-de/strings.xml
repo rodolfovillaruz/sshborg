@@ -116,6 +116,8 @@
     <string name="host_reset_host_keys">Akzeptierte Hostschlüssel zurücksetzen</string>
     <string name="host_reset_host_keys_pending">Schlüssel werden beim Speichern zurückgesetzt</string>
     <string name="host_reset_host_keys_hint">Verwirft den gespeicherten Hostschlüssel und zwischengespeicherte Jump-Host-Schlüssel. Bei der nächsten Verbindung wird der Server erneut überprüft.</string>
+    <string name="host_ec2_linked">Mit EC2-Instanz %1$s verknüpft. Booter hält die Adresse aktuell.</string>
+    <string name="host_ec2_unlink">Trennen</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">SSH-Schlüssel</string>

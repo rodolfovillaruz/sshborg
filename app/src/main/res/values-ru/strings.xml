@@ -120,6 +120,8 @@
     <string name="host_reset_host_keys">Сбросить принятые ключи хостов</string>
     <string name="host_reset_host_keys_pending">Ключи будут сброшены при сохранении</string>
     <string name="host_reset_host_keys_hint">Забывает сохранённый ключ хоста и кешированные ключи промежуточных хостов. При следующем подключении сервер будет проверен заново.</string>
+    <string name="host_ec2_linked">Связан с экземпляром EC2 %1$s. Booter поддерживает адрес в актуальном состоянии.</string>
+    <string name="host_ec2_unlink">Отвязать</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">SSH-ключи</string>

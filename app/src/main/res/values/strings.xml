@@ -120,6 +120,8 @@
     <string name="host_reset_host_keys">Reset accepted host keys</string>
     <string name="host_reset_host_keys_pending">Host keys will be reset on save</string>
     <string name="host_reset_host_keys_hint">Forgets the saved host key and cached jump-host keys. The next connection will verify the server again.</string>
+    <string name="host_ec2_linked">Linked to EC2 instance %1$s. Booter keeps its address current.</string>
+    <string name="host_ec2_unlink">Unlink</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">SSH Keys</string>

@@ -119,6 +119,8 @@
     <string name="host_reset_host_keys">承認済みホスト鍵をリセット</string>
     <string name="host_reset_host_keys_pending">保存時に鍵をリセットします</string>
     <string name="host_reset_host_keys_hint">保存済みのホスト鍵とキャッシュされた踏み台ホスト鍵を破棄します。次回の接続時にサーバーを再検証します。</string>
+    <string name="host_ec2_linked">EC2 インスタンス %1$s にリンク済み。アドレスは Booter が最新に保ちます。</string>
+    <string name="host_ec2_unlink">リンク解除</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">SSH 鍵</string>

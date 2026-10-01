@@ -67,4 +67,10 @@ data class HostEntity(
      * Null/blank falls back to the host label.
      */
     val tmuxCommand: String? = null,
+    /**
+     * EC2 instance ID (i-…) this host stands for, set when Booter opens it. Booter sends the
+     * instance's current public IP each time, which replaces [hostname]: without an Elastic IP
+     * that address changes on every start.
+     */
+    val ec2InstanceId: String? = null,
 )

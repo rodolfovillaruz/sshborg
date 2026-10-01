@@ -263,6 +263,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
                         h.position?.let { put("position", it) }
                         h.lastConnected?.let { put("lastConnected", it) }
                         if (h.connectCount > 0) put("connectCount", h.connectCount)
+                        h.ec2InstanceId?.let { put("ec2InstanceId", it) }
                     })
                 }
                 val json = JSONObject().apply {
@@ -352,6 +353,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
                         color = if (o.has("color")) o.getInt("color") else null,
                         position = if (o.has("position")) o.getInt("position") else null,
                         connectCount = o.optInt("connectCount", 0),
+                        ec2InstanceId = o.optString("ec2InstanceId").takeIf { it.isNotEmpty() },
                     )
                 }
                 val existingByLabel = hostDao.getAllOnce().associateBy { it.label }
@@ -389,6 +391,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
                             lastConnected     = existing.lastConnected ?: host.lastConnected,
                             connectCount      = maxOf(existing.connectCount, host.connectCount),
                             position          = existing.position ?: host.position,
+                            ec2InstanceId     = existing.ec2InstanceId ?: host.ec2InstanceId,
                         ))
                         updated++
                     } else { hostDao.upsert(host); inserted++ }

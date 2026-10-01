@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.sshborg.Ec2Launch
 import com.sshborg.R
 import com.sshborg.Screen
 import com.sshborg.data.db.GroupEntity
@@ -39,7 +40,9 @@ import com.sshborg.ui.common.TvTapField
 @Composable
 fun AddEditHostScreen(
     hostId: Long,
-    onSaved: () -> Unit,
+    /** Booter's request for an instance with no saved host yet: prefills a new host. */
+    ec2Prefill: Ec2Launch? = null,
+    onSaved: (hostId: Long, label: String) -> Unit,
     onBack: () -> Unit,
     vm: AddEditHostViewModel = viewModel(),
 ) {
@@ -51,7 +54,10 @@ fun AddEditHostScreen(
     val context = LocalContext.current
     val touchless = remember { isTouchless(context) }
 
-    LaunchedEffect(hostId) { vm.loadHost(hostId) }
+    LaunchedEffect(hostId) {
+        vm.loadHost(hostId)
+        if (isNew && ec2Prefill != null) vm.prefillEc2(ec2Prefill)
+    }
 
     val label by vm.label.collectAsState()
     val hostname by vm.hostname.collectAsState()
@@ -77,6 +83,7 @@ fun AddEditHostScreen(
     val groupId by vm.groupId.collectAsState()
     val hostColor by vm.hostColor.collectAsState()
     val hasStoredHostKeys by vm.hasStoredHostKeys.collectAsState()
+    val ec2InstanceId by vm.ec2InstanceId.collectAsState()
     val resetHostKeys by vm.resetHostKeys.collectAsState()
 
     var passwordVisible by remember { mutableStateOf(false) }
@@ -492,6 +499,21 @@ fun AddEditHostScreen(
                 Switch(checked = sftpShowHidden, onCheckedChange = { vm.sftpShowHidden.value = it })
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.host_sftp_show_hidden))
+            }
+
+            ec2InstanceId?.let { instanceId ->
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.host_ec2_linked, instanceId),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                    )
+                    TextButton(onClick = { vm.ec2InstanceId.value = null }) {
+                        Text(stringResource(R.string.host_ec2_unlink))
+                    }
+                }
             }
 
             if (hasStoredHostKeys) {

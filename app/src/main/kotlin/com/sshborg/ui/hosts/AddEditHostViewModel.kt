@@ -3,6 +3,7 @@ package com.sshborg.ui.hosts
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.sshborg.Ec2Launch
 import com.sshborg.Screen
 import com.sshborg.SshBorgApp
 import com.sshborg.data.KeystoreManager
@@ -60,6 +61,9 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
     var groupId = MutableStateFlow<Long?>(null)
     /** Optional per-host ARGB color; overrides the group color. */
     var hostColor = MutableStateFlow<Int?>(null)
+
+    /** EC2 instance this host is linked to (see HostEntity.ec2InstanceId); null = none. */
+    var ec2InstanceId = MutableStateFlow<String?>(null)
 
     /** When true, the saved host key and cached jump-host keys are cleared on save. */
     var resetHostKeys = MutableStateFlow(false)
@@ -124,9 +128,17 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
             tmuxCommand.value = h.tmuxCommand ?: ""
             groupId.value = h.groupId
             hostColor.value = h.color
+            ec2InstanceId.value = h.ec2InstanceId
             _hasStoredHostKeys.value = h.knownHostsEntry != null || h.jumpHostKeys != null
             resetHostKeys.value = false
         }
+    }
+
+    /** A new host for the instance Booter asked to open: its name, address and link. */
+    fun prefillEc2(launch: Ec2Launch) {
+        label.value = launch.name
+        hostname.value = launch.host
+        ec2InstanceId.value = launch.instanceId
     }
 
     /** Creates a new group and selects it for this host. */
@@ -134,7 +146,7 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
         groupId.value = groupDao.upsert(GroupEntity(name = name, color = color))
     }
 
-    fun save(onDone: () -> Unit) = viewModelScope.launch {
+    fun save(onDone: (hostId: Long, label: String) -> Unit) = viewModelScope.launch {
         val rawPassword = if (!useKey.value) password.value.takeIf { it.isNotEmpty() } else null
         val encEnabled = prefs.keystoreEncryption.first()
 
@@ -196,8 +208,9 @@ class AddEditHostViewModel(app: Application) : AndroidViewModel(app) {
             tmuxCommand          = tmuxCommand.value.trim().takeIf { it.isNotEmpty() },
             groupId              = groupId.value,
             color                = hostColor.value,
+            ec2InstanceId        = ec2InstanceId.value,
         )
-        hostDao.upsert(entity)
-        onDone()
+        val savedId = hostDao.upsert(entity)
+        onDone(savedId, entity.label)
     }
 }

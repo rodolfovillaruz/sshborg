@@ -1,6 +1,7 @@
 package com.sshborg
 
 import android.app.Activity
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedButton
@@ -34,8 +35,11 @@ import com.sshborg.ui.terminal.TerminalScreen
 
 sealed class Screen(val route: String) {
     object Hosts : Screen("hosts")
-    object AddEditHost : Screen("hosts/{hostId}") {
+    object AddEditHost : Screen("hosts/{hostId}?ec2Id={ec2Id}&ec2Name={ec2Name}&ec2Host={ec2Host}") {
         fun routeFor(id: Long) = "hosts/$id"
+        /** A new host, prefilled from Booter's request and linked to its instance. */
+        fun routeFor(launch: Ec2Launch) = "hosts/$NEW_ID?ec2Id=${Uri.encode(launch.instanceId)}" +
+            "&ec2Name=${Uri.encode(launch.name)}&ec2Host=${Uri.encode(launch.host)}"
         const val NEW_ID = -1L
     }
     object Terminal : Screen("terminal/{sessionId}") {
@@ -52,8 +56,15 @@ sealed class Screen(val route: String) {
     }
 }
 
+/**
+ * [ec2Launch] is a request from Booter to open (MainActivity holds it back while the app is
+ * locked); [onEc2LaunchTaken] tells it the request is being handled, so it runs only once.
+ */
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    ec2Launch: Ec2Launch? = null,
+    onEc2LaunchTaken: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val app = context.applicationContext as SshBorgApp
@@ -148,6 +159,36 @@ fun AppNavigation() {
         )
     }
 
+    fun openTerminal(hostId: Long, hostLabel: String) {
+        val id = sessionManager.create(hostId, hostLabel, SessionManager.SessionType.Shell)
+        SshForegroundService.start(context)
+        navController.navigate(Screen.Terminal.routeFor(id))
+    }
+
+    // Booter: a saved instance goes straight to its terminal (the open one, if there is one),
+    // an unknown one to the host editor, prefilled.
+    LaunchedEffect(ec2Launch) {
+        val launch = ec2Launch ?: return@LaunchedEffect
+        onEc2LaunchTaken()
+        // In the outer scope: taking the request changes this effect's key, which cancels it.
+        scope.launch {
+            when (val target = launch.resolve(app.db.hostDao())) {
+                is Ec2Launch.Target.Saved -> {
+                    val host = target.host
+                    val open = sessionManager.sessions.value.lastOrNull {
+                        it.hostId == host.id && it.type == SessionManager.SessionType.Shell &&
+                            (it.status == SessionManager.Status.Connected ||
+                                it.status == SessionManager.Status.Connecting)
+                    }
+                    if (open != null) navController.navigate(Screen.Terminal.routeFor(open.id))
+                    else openTerminal(host.id, host.label)
+                }
+                is Ec2Launch.Target.New ->
+                    navController.navigate(Screen.AddEditHost.routeFor(target.launch))
+            }
+        }
+    }
+
     NavHost(navController = navController, startDestination = Screen.Hosts.route) {
 
         composable(Screen.Hosts.route) {
@@ -155,11 +196,7 @@ fun AppNavigation() {
 
             HostsScreen(
                 sessions = sessions,
-                onNewTerminal = { hostId, hostLabel ->
-                    val id = sessionManager.create(hostId, hostLabel, SessionManager.SessionType.Shell)
-                    SshForegroundService.start(context)
-                    navController.navigate(Screen.Terminal.routeFor(id))
-                },
+                onNewTerminal = { hostId, hostLabel -> openTerminal(hostId, hostLabel) },
                 onResumeTerminal = { sessionId ->
                     navController.navigate(Screen.Terminal.routeFor(sessionId))
                 },
@@ -180,12 +217,26 @@ fun AppNavigation() {
 
         composable(
             Screen.AddEditHost.route,
-            arguments = listOf(navArgument("hostId") { type = NavType.LongType }),
+            arguments = listOf(
+                navArgument("hostId") { type = NavType.LongType },
+                navArgument("ec2Id") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("ec2Name") { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument("ec2Host") { type = NavType.StringType; nullable = true; defaultValue = null },
+            ),
         ) { backEntry ->
-            val hostId = backEntry.arguments?.getLong("hostId") ?: Screen.AddEditHost.NEW_ID
+            val args = backEntry.arguments
+            val hostId = args?.getLong("hostId") ?: Screen.AddEditHost.NEW_ID
+            val ec2Prefill = args?.getString("ec2Id")?.let { ec2Id ->
+                Ec2Launch(ec2Id, args.getString("ec2Name") ?: ec2Id, args.getString("ec2Host").orEmpty())
+            }
             AddEditHostScreen(
                 hostId = hostId,
-                onSaved = { navController.popBackStack() },
+                ec2Prefill = ec2Prefill,
+                onSaved = { savedId, savedLabel ->
+                    navController.popBackStack()
+                    // Booter asked to open this instance: connect now that it has a host.
+                    if (ec2Prefill != null) openTerminal(savedId, savedLabel)
+                },
                 onBack  = { navController.popBackStack() },
             )
         }

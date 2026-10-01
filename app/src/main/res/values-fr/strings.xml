@@ -116,6 +116,8 @@
     <string name="host_reset_host_keys">Réinitialiser les clés d\'hôte acceptées</string>
     <string name="host_reset_host_keys_pending">Les clés seront réinitialisées à l\'enregistrement</string>
     <string name="host_reset_host_keys_hint">Oublie la clé d\'hôte enregistrée et les clés de rebond en cache. La prochaine connexion vérifiera à nouveau le serveur.</string>
+    <string name="host_ec2_linked">Lié à l\'instance EC2 %1$s. Booter tient son adresse à jour.</string>
+    <string name="host_ec2_unlink">Délier</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">Clés SSH</string>

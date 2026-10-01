@@ -116,6 +116,8 @@
     <string name="host_reset_host_keys">Azzera chiavi host accettate</string>
     <string name="host_reset_host_keys_pending">Le chiavi verranno azzerate al salvataggio</string>
     <string name="host_reset_host_keys_hint">Dimentica la chiave host salvata e le chiavi jump-host in cache. Alla prossima connessione l\'identità del server verrà verificata di nuovo.</string>
+    <string name="host_ec2_linked">Collegato all\'istanza EC2 %1$s. Booter ne mantiene aggiornato l\'indirizzo.</string>
+    <string name="host_ec2_unlink">Scollega</string>
 
     <!-- ── Keys screen ─────────────────────────────────────────────────── -->
     <string name="keys_title">Chiavi SSH</string>
