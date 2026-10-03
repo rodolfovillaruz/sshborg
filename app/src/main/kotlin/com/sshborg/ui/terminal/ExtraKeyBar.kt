@@ -81,15 +81,17 @@ private fun arrowKeyFont(): FontFamily = com.sshborg.ui.common.monoFont()
 class ExtraBarState(
     val ctrlActive: Boolean,
     val altActive: Boolean,
+    val shiftActive: Boolean,
     val wordMode: Boolean,
     val pinned: Boolean,
     val keyboardVisible: Boolean,
     val onCtrlToggle: () -> Unit,
     val onAltToggle: () -> Unit,
+    val onShiftToggle: () -> Unit,
     val onWordModeToggle: () -> Unit,
     val onPinToggle: () -> Unit,
     val onKeyboardToggle: () -> Unit,
-    /** Raw bytes to the session; the screen applies the sticky Ctrl/Alt to single bytes. */
+    /** Raw bytes to the session; the screen applies the sticky modifiers and clears them. */
     val onKey: (ByteArray) -> Unit,
     val cursorKeys: (Char) -> ByteArray,
 )
@@ -196,12 +198,25 @@ private fun RowScope.ExtraKeyItem(
         is ExtraKeyDef.Special -> ExtraKey(
             label = key.displayLabel, fontSize = fontSize, modifier = modifier, hPad = hPad,
             active = highlighted, isArrow = key.key.isArrow, repeatOnHold = key.repeatOnHold && !editing,
-            onClick = click { state.onKey(key.key.bytes(state.cursorKeys)) },
+            onClick = click {
+                state.onKey(
+                    if (state.shiftActive) key.key.shiftedBytes(state.cursorKeys)
+                    else key.key.bytes(state.cursorKeys)
+                )
+            },
         )
         is ExtraKeyDef.Modifier -> ExtraKey(
             label = key.displayLabel, fontSize = fontSize, modifier = modifier, hPad = hPad,
-            active = highlighted || (if (key.mod == ModKey.CTRL) state.ctrlActive else state.altActive),
-            onClick = click(if (key.mod == ModKey.CTRL) state.onCtrlToggle else state.onAltToggle),
+            active = highlighted || when (key.mod) {
+                ModKey.CTRL  -> state.ctrlActive
+                ModKey.ALT   -> state.altActive
+                ModKey.SHIFT -> state.shiftActive
+            },
+            onClick = click(when (key.mod) {
+                ModKey.CTRL  -> state.onCtrlToggle
+                ModKey.ALT   -> state.onAltToggle
+                ModKey.SHIFT -> state.onShiftToggle
+            }),
         )
         is ExtraKeyDef.Text -> ExtraKey(
             label = key.displayLabel, fontSize = fontSize, modifier = modifier, hPad = hPad,
@@ -246,8 +261,9 @@ private fun RowScope.ExtraKeyItem(
 
 /** A no-op state for previews (editor): nothing toggles, nothing is sent. */
 fun previewExtraBarState() = ExtraBarState(
-    ctrlActive = false, altActive = false, wordMode = false, pinned = false, keyboardVisible = false,
-    onCtrlToggle = {}, onAltToggle = {}, onWordModeToggle = {}, onPinToggle = {}, onKeyboardToggle = {},
+    ctrlActive = false, altActive = false, shiftActive = false, wordMode = false, pinned = false,
+    keyboardVisible = false,
+    onCtrlToggle = {}, onAltToggle = {}, onShiftToggle = {}, onWordModeToggle = {}, onPinToggle = {}, onKeyboardToggle = {},
     onKey = {}, cursorKeys = { byteArrayOf() },
 )
 

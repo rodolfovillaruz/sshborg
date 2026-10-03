@@ -74,10 +74,44 @@ enum class SpecialKey(val label: String, val repeat: Boolean = false) {
         F11   -> "[23~".toByteArray()
         F12   -> "[24~".toByteArray()
     }
+
+    /**
+     * Bytes to send with Shift held: xterm's modified forms (modifier parameter 2), the same
+     * in either cursor-key mode. Keys without a shifted form (ESC, Enter, ⌫) send their plain bytes.
+     */
+    fun shiftedBytes(cursorKeys: (Char) -> ByteArray): ByteArray = when (this) {
+        ESC, ENTER, BKSP -> bytes(cursorKeys)
+        TAB   -> "\u001B[Z".toByteArray()
+        UP    -> "\u001B[1;2A".toByteArray()
+        DOWN  -> "\u001B[1;2B".toByteArray()
+        RIGHT -> "\u001B[1;2C".toByteArray()
+        LEFT  -> "\u001B[1;2D".toByteArray()
+        HOME  -> "\u001B[1;2H".toByteArray()
+        END   -> "\u001B[1;2F".toByteArray()
+        INS   -> "\u001B[2;2~".toByteArray()
+        DEL   -> "\u001B[3;2~".toByteArray()
+        PGUP  -> "\u001B[5;2~".toByteArray()
+        PGDN  -> "\u001B[6;2~".toByteArray()
+        F1    -> "\u001B[1;2P".toByteArray()
+        F2    -> "\u001B[1;2Q".toByteArray()
+        F3    -> "\u001B[1;2R".toByteArray()
+        F4    -> "\u001B[1;2S".toByteArray()
+        F5    -> "\u001B[15;2~".toByteArray()
+        F6    -> "\u001B[17;2~".toByteArray()
+        F7    -> "\u001B[18;2~".toByteArray()
+        F8    -> "\u001B[19;2~".toByteArray()
+        F9    -> "\u001B[20;2~".toByteArray()
+        F10   -> "\u001B[21;2~".toByteArray()
+        F11   -> "\u001B[23;2~".toByteArray()
+        F12   -> "\u001B[24;2~".toByteArray()
+    }
 }
 
-/** Sticky one-shot modifiers, applied to the next single byte by the terminal screen. */
-enum class ModKey(val label: String) { CTRL("Ctrl"), ALT("Alt") }
+/**
+ * Sticky one-shot modifiers. The terminal screen applies Ctrl/Alt to the next single byte;
+ * Shift upper-cases the next letter or sends the next bar key's shifted form.
+ */
+enum class ModKey(val label: String) { CTRL("Ctrl"), ALT("Alt"), SHIFT("Shift") }
 
 /** Bar/app actions rendered as icon keys. */
 enum class BarAction { PASTE, PIN, WORD_MODE, SWITCH_BAR, KEYBOARD }

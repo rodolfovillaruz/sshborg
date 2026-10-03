@@ -110,9 +110,16 @@ fun TerminalScreen(
 
     var ctrlActive by remember { mutableStateOf(false) }
     var altActive  by remember { mutableStateOf(false) }
+    var shiftActive by remember { mutableStateOf(false) }
     var wordMode   by remember { mutableStateOf(false) }
 
-    val sendInput: (ByteArray) -> Unit = { bytes ->
+    val sendInput: (ByteArray) -> Unit = { input ->
+        // Shift is spent on whatever comes next: a lone letter is upper-cased here, and bar
+        // keys already arrive in their shifted form.
+        val bytes = if (shiftActive && input.size == 1 && input[0].toInt() in 'a'.code..'z'.code) {
+            byteArrayOf((input[0] - 0x20).toByte())
+        } else input
+        shiftActive = false
         val out = when {
             ctrlActive && bytes.size == 1 -> {
                 ctrlActive = false
@@ -274,11 +281,13 @@ fun TerminalScreen(
                         state = ExtraBarState(
                             ctrlActive       = ctrlActive,
                             altActive        = altActive,
+                            shiftActive      = shiftActive,
                             wordMode         = wordMode,
                             pinned           = extraBarPinned,
                             keyboardVisible  = imeVisible,
                             onCtrlToggle     = { ctrlActive = !ctrlActive },
                             onAltToggle      = { altActive  = !altActive  },
+                            onShiftToggle    = { shiftActive = !shiftActive },
                             onWordModeToggle = { wordMode   = !wordMode   },
                             onPinToggle      = { vm.toggleExtraBarPinned() },
                             onKeyboardToggle = {
