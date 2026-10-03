@@ -6,7 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Description of the terminal's extra-key bar (issue #12): one to three rows of
+ * Description of the terminal's extra-key bar (issue #12): one to ten rows of
  * keys, a font size, and per row whether the keys stretch to the width or keep
  * their natural size and scroll. Presets live in [ExtraBarPresets]; custom bars
  * are the same type persisted as JSON in [AppPreferences].
@@ -23,7 +23,7 @@ data class ExtraBar(
     companion object {
         const val PRESET_PREFIX = "preset:"
         const val CUSTOM_PREFIX = "custom:"
-        const val MAX_ROWS = 3
+        const val MAX_ROWS = 10
     }
 }
 
